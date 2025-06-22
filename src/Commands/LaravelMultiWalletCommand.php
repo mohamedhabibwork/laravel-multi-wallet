@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace HWallet\LaravelMultiWallet\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelMultiWalletCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-multi-wallet';
 
     public $description = 'My command';
 

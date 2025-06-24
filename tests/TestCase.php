@@ -2,36 +2,65 @@
 
 namespace HWallet\LaravelMultiWallet\Tests;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Orchestra\Testbench\TestCase as Orchestra;
 use HWallet\LaravelMultiWallet\LaravelMultiWalletServiceProvider;
+use HWallet\LaravelMultiWallet\Tests\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Orchestra\Testbench\TestCase as Orchestra;
 
-class TestCase extends Orchestra
+abstract class TestCase extends Orchestra
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'HWallet\\LaravelMultiWallet\\Database\\Factories\\'.class_basename($modelName).'Factory'
-        );
+        // Run migrations
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        // Create users table if it doesn't exist
+        if (! \Schema::hasTable('users')) {
+            \Schema::create('users', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             LaravelMultiWalletServiceProvider::class,
         ];
     }
 
-    public function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app): void
     {
-        config()->set('database.default', 'testing');
+        // Configure database
+        $app['config']->set('database.default', 'testing');
+        $app['config']->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        // Configure multi-wallet
+        $app['config']->set('multi-wallet.default_currency', 'USD');
+        $app['config']->set('multi-wallet.table_names.wallets', 'wallets');
+        $app['config']->set('multi-wallet.table_names.transactions', 'transactions');
+        $app['config']->set('multi-wallet.table_names.transfers', 'transfers');
+        $app['config']->set('multi-wallet.audit_logging_enabled', false);
+        $app['config']->set('multi-wallet.events.enabled', false);
+    }
+
+    protected function createUser(array $attributes = []): User
+    {
+        return User::factory()->create($attributes);
     }
 }

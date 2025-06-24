@@ -1,9 +1,9 @@
 # Laravel Multi-Currency Wallet Management Package
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/hwallet/laravel-multi-wallet.svg?style=flat-square)](https://packagist.org/packages/hwallet/laravel-multi-wallet)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/hwallet/laravel-multi-wallet/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/hwallet/laravel-multi-wallet/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/hwallet/laravel-multi-wallet/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/hwallet/laravel-multi-wallet/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/hwallet/laravel-multi-wallet.svg?style=flat-square)](https://packagist.org/packages/hwallet/laravel-multi-wallet)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/mohamedhabibwork/laravel-multi-wallet.svg?style=flat-square)](https://packagist.org/packages/mohamedhabibwork/laravel-multi-wallet)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/mohamedhabibwork/laravel-multi-wallet/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/mohamedhabibwork/laravel-multi-wallet/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mohamedhabibwork/laravel-multi-wallet/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mohamedhabibwork/laravel-multi-wallet/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/mohamedhabibwork/laravel-multi-wallet.svg?style=flat-square)](https://packagist.org/packages/mohamedhabibwork/laravel-multi-wallet)
 
 A comprehensive Laravel package for managing multi-currency wallets with advanced features including multiple balance types, transfers, fees, discounts, and configurable exchange rates. Perfect for e-commerce, fintech, and any application requiring robust financial transaction management.
 

@@ -2,6 +2,7 @@
 
 namespace HWallet\LaravelMultiWallet\Services;
 
+use HWallet\LaravelMultiWallet\Attributes\WalletOperation;
 use HWallet\LaravelMultiWallet\Contracts\ExchangeRateProviderInterface;
 use HWallet\LaravelMultiWallet\Contracts\WalletConfigurationInterface;
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
@@ -15,9 +16,12 @@ use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Macroable;
 
 class WalletManager
 {
+    use Macroable;
+
     protected WalletConfigurationInterface $config;
 
     protected ExchangeRateProviderInterface $exchangeRateProvider;
@@ -31,6 +35,7 @@ class WalletManager
     /**
      * Create a new wallet for a model
      */
+    #[WalletOperation('create_wallet', description: 'Create a new wallet for a model', requiresValidation: true, fireEvents: true)]
     public function create(
         Model $holder,
         string $currency,
@@ -99,6 +104,7 @@ class WalletManager
     /**
      * Transfer funds between wallets
      */
+    #[WalletOperation('transfer', description: 'Transfer funds between wallets', requiresValidation: true, fireEvents: true)]
     public function transfer(
         Wallet $fromWallet,
         Wallet $toWallet,
@@ -600,5 +606,246 @@ class WalletManager
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Get bulk wallet manager
+     */
+    public function getBulkWalletManager(): \HWallet\LaravelMultiWallet\Services\BulkWalletManager
+    {
+        return app(\HWallet\LaravelMultiWallet\Services\BulkWalletManager::class);
+    }
+
+    /**
+     * Execute bulk operations
+     */
+    #[WalletOperation('bulk_operations', description: 'Execute bulk wallet operations', requiresValidation: true, fireEvents: true)]
+    public function executeBulkOperations(string $operationType, array $operations): array
+    {
+        $bulkManager = $this->getBulkWalletManager();
+
+        return match ($operationType) {
+            'credit' => $bulkManager->bulkCredit($operations),
+            'debit' => $bulkManager->bulkDebit($operations),
+            'transfer' => $bulkManager->bulkTransfer($operations),
+            'freeze' => $bulkManager->bulkFreeze($operations),
+            'unfreeze' => $bulkManager->bulkUnfreeze($operations),
+            'create_wallets' => $bulkManager->bulkCreateWallets($operations),
+            'update_balances' => $bulkManager->bulkUpdateBalances($operations),
+            default => throw new \InvalidArgumentException("Unsupported bulk operation type: {$operationType}")
+        };
+    }
+
+    /**
+     * Get wallet configuration attributes from model
+     */
+    public function getWalletConfigurationFromModel(Model $model): array
+    {
+        if (method_exists($model, 'getWalletConfiguration')) {
+            return $model->getWalletConfiguration();
+        }
+
+        return [];
+    }
+
+    /**
+     * Create wallet with configuration attributes
+     */
+    #[WalletOperation('create_wallet_with_config', description: 'Create wallet using model configuration', requiresValidation: true, fireEvents: true)]
+    public function createWalletWithConfig(Model $holder, ?string $currency = null, ?string $name = null): Wallet
+    {
+        $config = $this->getWalletConfigurationFromModel($holder);
+
+        $currency = $currency ?? $config['default_currency'] ?? 'USD';
+        $name = $name ?? $config['wallet_name'] ?? null;
+        $attributes = $config['metadata'] ?? [];
+
+        return $this->create($holder, $currency, $name, $attributes);
+    }
+
+    /**
+     * Batch create wallets for multiple currencies
+     */
+    #[WalletOperation('batch_create_wallets', description: 'Create multiple wallets for different currencies', requiresValidation: true, fireEvents: true)]
+    public function batchCreateWallets(Model $holder, array $currencies): array
+    {
+        $wallets = [];
+
+        foreach ($currencies as $currency => $config) {
+            if (is_numeric($currency)) {
+                // Simple array of currencies
+                $currency = $config;
+                $config = [];
+            }
+
+            $name = $config['name'] ?? null;
+            $attributes = $config['attributes'] ?? [];
+
+            $wallets[$currency] = $this->create($holder, $currency, $name, $attributes);
+        }
+
+        return $wallets;
+    }
+
+    /**
+     * Get wallet statistics
+     */
+    public function getWalletStatistics(Wallet $wallet): array
+    {
+        $transactions = $wallet->transactions();
+        $transfers = Transfer::involving($wallet->holder)->get();
+
+        return [
+            'total_transactions' => $transactions->count(),
+            'total_credits' => $transactions->where('type', TransactionType::CREDIT)->sum('amount'),
+            'total_debits' => $transactions->where('type', TransactionType::DEBIT)->sum('amount'),
+            'total_transfers_sent' => $transfers->where('from_type', $wallet->holder_type)
+                ->where('from_id', $wallet->holder_id)->count(),
+            'total_transfers_received' => $transfers->where('to_type', $wallet->holder_type)
+                ->where('to_id', $wallet->holder_id)->count(),
+            'current_balance' => $wallet->getTotalBalance(),
+            'available_balance' => $wallet->getBalance(BalanceType::AVAILABLE),
+            'pending_balance' => $wallet->getBalance(BalanceType::PENDING),
+            'frozen_balance' => $wallet->getBalance(BalanceType::FROZEN),
+            'trial_balance' => $wallet->getBalance(BalanceType::TRIAL),
+        ];
+    }
+
+    /**
+     * Reconcile wallet balances
+     */
+    #[WalletOperation('reconcile_wallet', description: 'Reconcile wallet balances with transactions', requiresValidation: true, fireEvents: true)]
+    public function reconcileWallet(Wallet $wallet): array
+    {
+        $transactions = $wallet->transactions()->get();
+
+        $calculatedBalances = [
+            'available' => 0,
+            'pending' => 0,
+            'frozen' => 0,
+            'trial' => 0,
+        ];
+
+        foreach ($transactions as $transaction) {
+            /** @var \HWallet\LaravelMultiWallet\Models\Transaction $transaction */
+            $balanceType = $transaction->balance_type->value;
+
+            if ($transaction->type === TransactionType::CREDIT) {
+                $calculatedBalances[$balanceType] += $transaction->amount;
+            } else {
+                $calculatedBalances[$balanceType] -= $transaction->amount;
+            }
+        }
+
+        $currentBalances = [
+            'available' => $wallet->getBalance(BalanceType::AVAILABLE),
+            'pending' => $wallet->getBalance(BalanceType::PENDING),
+            'frozen' => $wallet->getBalance(BalanceType::FROZEN),
+            'trial' => $wallet->getBalance(BalanceType::TRIAL),
+        ];
+
+        $differences = [];
+        foreach ($calculatedBalances as $type => $calculated) {
+            $current = $currentBalances[$type];
+            if (abs($calculated - $current) > 0.01) { // Allow for small floating point differences
+                $differences[$type] = [
+                    'calculated' => $calculated,
+                    'current' => $current,
+                    'difference' => $calculated - $current,
+                ];
+            }
+        }
+
+        return [
+            'wallet_id' => $wallet->id,
+            'is_balanced' => empty($differences),
+            'differences' => $differences,
+            'calculated_balances' => $calculatedBalances,
+            'current_balances' => $currentBalances,
+        ];
+    }
+
+    /**
+     * Auto-reconcile wallet if differences found
+     */
+    #[WalletOperation('auto_reconcile_wallet', description: 'Automatically reconcile wallet balances', requiresValidation: true, fireEvents: true)]
+    public function autoReconcileWallet(Wallet $wallet): bool
+    {
+        $reconciliation = $this->reconcileWallet($wallet);
+
+        if ($reconciliation['is_balanced']) {
+            return true;
+        }
+
+        // Update balances to match calculated values
+        foreach ($reconciliation['differences'] as $type => $difference) {
+            $wallet->update(["balance_{$type}" => $difference['calculated']]);
+        }
+
+        // Fire reconciliation event
+        event(new \HWallet\LaravelMultiWallet\Events\WalletReconciled(
+            $wallet,
+            $reconciliation['differences'],
+            $reconciliation['current_balances'], // corrections
+            auth()->user()->name ?? 'system' // reconciledBy
+        ));
+
+        return true;
+    }
+
+    /**
+     * Validate wallet operation using attributes
+     */
+    public function validateWalletOperation(string $method, array $params = []): bool
+    {
+        $reflection = new \ReflectionMethod($this, $method);
+        $attributes = $reflection->getAttributes(\HWallet\LaravelMultiWallet\Attributes\WalletOperation::class);
+
+        if (empty($attributes)) {
+            return true; // No validation required
+        }
+
+        $operationConfig = $attributes[0]->newInstance();
+
+        if ($operationConfig->requiresValidation) {
+            // Perform validation based on operation type
+            return $this->performOperationValidation($operationConfig->operation, $params);
+        }
+
+        return true;
+    }
+
+    /**
+     * Perform operation validation
+     */
+    protected function performOperationValidation(string $operation, array $params): bool
+    {
+        // Implement validation logic based on operation type
+        switch ($operation) {
+            case 'create_wallet':
+                return $this->validateCreateWallet($params);
+            case 'transfer':
+                return $this->validateTransfer($params);
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Validate create wallet operation
+     */
+    protected function validateCreateWallet(array $params): bool
+    {
+        // Implement create wallet validation
+        return true;
+    }
+
+    /**
+     * Validate transfer operation
+     */
+    protected function validateTransfer(array $params): bool
+    {
+        // Implement transfer validation
+        return true;
     }
 }

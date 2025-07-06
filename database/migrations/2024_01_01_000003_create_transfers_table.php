@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create(config('multi-wallet.table_names.transfers'), function (Blueprint $table) {
             $table->id();
+            $table->string('uuid');
             $table->morphs('from');
             $table->morphs('to');
             $table->string('status')->default('pending'); // Changed from enum to string
@@ -18,11 +19,13 @@ return new class extends Migration
             $table->foreignId('withdraw_id')->nullable()->constrained(config('multi-wallet.table_names.transactions'));
             $table->decimal('discount', 64, 8)->default(0);
             $table->decimal('fee', 64, 8)->default(0);
-            $table->string('uuid')->unique();
+            $table->json('meta')->nullable();
             $table->timestampTz('created_at')->useCurrent()->index();
             $table->timestampTz('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletesTz()->index();
             $table->index('status');
+            $table->unique(['uuid', 'deleted_at']);
+
         });
     }
 

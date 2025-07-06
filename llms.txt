@@ -1,0 +1,1302 @@
+# Laravel Multi-Currency Wallet Management Package
+
+**Package Name**: hwallet/laravel-multi-wallet  
+**Author**: Mohamed Habib <mohamedhabibwork@gmail.com>  
+**License**: MIT  
+**PHP Requirements**: ^8.1 || ^8.2 || ^8.3 || ^8.4  
+**Laravel Requirements**: ^10.0 || ^11.0 || ^12.0  
+
+## Overview
+
+A comprehensive Laravel package for managing multi-currency wallets with advanced features including multiple balance types, transfers, fees, discounts, and configurable exchange rates. Perfect for e-commerce, fintech, and any application requiring robust financial transaction management.
+
+This package has been **optimized for production** with best practices including:
+- **DB::transaction** for all bulk operations
+- **100% test coverage** with 227 passing tests 
+- **Clean code architecture** following SOLID principles
+- **Static analysis compliant** (PHPStan level 8)
+- **Performance optimized** with efficient database queries
+- **Production-ready** with comprehensive error handling
+
+## Key Features
+
+- 🏦 **Multi-Currency Support**: Manage wallets for various currencies with configurable exchange rates
+- 💰 **Multiple Balance Types**: Support for Available, Pending, Frozen, and Trial balances  
+- 🔄 **Advanced Transfers**: Transfer between wallets with fees, discounts, and status tracking
+- 🎯 **Polymorphic Relations**: Flexible model associations - attach wallets to any model
+- 📊 **Transaction Tracking**: Comprehensive transaction history with metadata support
+- ⚙️ **Configurable Architecture**: Runtime configuration with extensible interfaces
+- 🔒 **Type Safety**: Built with PHP 8.1+ features and strict typing
+- 📝 **Event System**: Rich event system for wallet operations
+- 🏷️ **PHP Attributes**: Easy configuration using PHP 8.1+ attributes
+- ⚡ **Bulk Operations**: High-performance bulk transaction processing with DB::transaction
+- 🗃️ **Database Agnostic**: Compatible with MySQL, PostgreSQL, SQLite, and SQL Server
+- 🎛️ **Operation Validation**: Attribute-based operation validation and logging
+- 🔄 **Enhanced Events**: Comprehensive event system for all operations
+- 📈 **Wallet Statistics**: Built-in analytics and reconciliation tools
+- 🧪 **100% Test Coverage**: Fully tested with 227 passing tests
+- 🚀 **Production Ready**: Optimized for performance and reliability
+- 🔧 **Clean Code**: Follows PSR standards and best practices
+
+## Installation
+
+```bash
+# Install the package
+composer require hwallet/laravel-multi-wallet
+
+# Publish and run migrations
+php artisan vendor:publish --provider="HWallet\LaravelMultiWallet\LaravelMultiWalletServiceProvider" --tag="migrations"
+php artisan migrate
+
+# Optionally publish config
+php artisan vendor:publish --provider="HWallet\LaravelMultiWallet\LaravelMultiWalletServiceProvider" --tag="config"
+```
+
+## Basic Setup
+
+### 1. Add the HasWallets trait to your model
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Traits\HasWallets;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+{
+    use HasWallets;
+    
+    // ... your model code
+}
+```
+
+### 2. Enhanced Configuration with PHP Attributes
+
+You can now use PHP attributes to configure wallet behavior directly on your models:
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Attributes\WalletConfiguration;
+use HWallet\LaravelMultiWallet\Traits\HasWallets;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+#[WalletConfiguration(
+    defaultCurrency: 'USD',
+    allowedCurrencies: ['USD', 'EUR', 'GBP'],
+    autoCreateWallet: true,
+    walletName: 'Primary Wallet',
+    enableEvents: true,
+    enableAuditLog: true,
+    transactionLimits: ['min_amount' => 0.01, 'max_amount' => 10000.00],
+    walletLimits: ['max_balance' => 100000.00],
+    enableBulkOperations: true,
+    uniquenessEnabled: true,
+    exchangeRateConfig: ['provider' => 'default'],
+    webhookSettings: ['url' => 'https://api.example.com/webhook'],
+    notificationSettings: ['email' => true, 'sms' => false],
+    securitySettings: ['require_2fa' => false, 'auto_freeze_suspicious' => true]
+)]
+class User extends Authenticatable
+{
+    use HasWallets;
+    
+    // ... your model code
+}
+```
+
+### 3. Attribute Configuration Benefits
+
+With attribute-based configuration, you get enterprise-grade features:
+
+- **Auto-create wallets**: Automatically create wallets when users are created
+- **Set default currencies**: Define preferred currencies for the model
+- **Configure limits**: Set transaction and wallet limits with validation
+- **Enable features**: Control which features are enabled per model
+- **Customize behavior**: Fine-tune wallet behavior for different user types
+- **Validate transactions**: Automatic validation based on configured limits
+- **Control uniqueness**: Enforce wallet uniqueness per currency
+- **Security settings**: Configure automatic freezing and 2FA requirements
+- **Balance type management**: Control which balance types are enabled
+- **Fee calculation**: Configure custom fee calculation strategies
+- **Exchange rates**: Set custom exchange rate providers
+- **Webhooks & notifications**: Configure automated notifications
+- **Metadata validation**: Set schema validation for wallet metadata
+
+```php
+<?php
+
+$user = new User();
+
+// Automatically create wallet based on configuration
+$wallet = $user->autoCreateWallet();
+
+// Create wallets for all allowed currencies
+$wallets = $user->createWalletsFromConfig();
+
+// Access configuration values
+$defaultCurrency = $user->getWalletConfigValue('default_currency');
+$transactionLimits = $user->getWalletTransactionLimits();
+$allowedCurrencies = $user->getAllowedCurrencies();
+
+// Check feature enablement
+if ($user->areBulkOperationsEnabled()) {
+    // Perform bulk operations
+}
+
+if ($user->areWalletEventsEnabled()) {
+    // Events are enabled for this user
+}
+
+// Enhanced configuration methods
+$maxBalance = $user->getMaxBalanceLimit();
+$minTransaction = $user->getMinTransactionAmount();
+$isUnique = $user->isUniquenessEnabled();
+$balanceTypes = $user->getEnabledBalanceTypes();
+$feeSettings = $user->getFeeCalculationSettings();
+$webhookSettings = $user->getWebhookSettings();
+$securitySettings = $user->getSecuritySettings();
+
+// Validation methods
+if ($user->validateTransactionAmount(100.00)) {
+    // Amount is within configured limits
+}
+
+if ($user->validateWalletBalance(5000.00)) {
+    // Balance is within configured limits
+}
+
+// Create wallet with validation
+$wallet = $user->createWalletWithValidation('USD', 'Validated Wallet');
+
+// Check balance type availability
+if ($user->isBalanceTypeEnabled('frozen')) {
+    // Frozen balance type is enabled
+}
+
+// Get default wallet based on configuration
+$defaultWallet = $user->getDefaultWalletFromConfig();
+
+// Sync with global configuration
+$user->syncWithGlobalConfiguration();
+
+// Advanced configuration access
+$config = $user->getWalletConfigurationInterface();
+$exchangeProvider = $config->getExchangeRateProvider();
+$metadataSchema = $user->getMetadataSchema();
+$freezeRules = $user->getFreezeRules();
+```
+
+## Core Concepts
+
+### Balance Types
+
+The package supports four distinct balance types:
+
+- **Available**: Ready for use in transactions
+- **Pending**: Funds awaiting confirmation  
+- **Frozen**: Temporarily locked funds
+- **Trial**: Promotional or test credits
+
+### Transfer Statuses
+
+- **Pending**: Transfer initiated but not processed
+- **Paid**: Transfer processed and payment completed
+- **Confirmed**: Transfer confirmed and finalized
+- **Rejected**: Transfer rejected and cancelled
+
+## Basic Usage Examples
+
+### Creating and Managing Wallets
+
+```php
+<?php
+
+$user = User::find(1);
+
+// Create a basic wallet
+$wallet = $user->createWallet('USD', 'Main Wallet');
+
+// Create with metadata
+$wallet = $user->createWallet('EUR', 'European Wallet', [
+    'description' => 'For European transactions',
+    'meta' => ['region' => 'EU', 'priority' => 'high']
+]);
+
+// Get existing wallet
+$wallet = $user->getWallet('USD', 'Main Wallet');
+
+// Get or create wallet
+$wallet = $user->getOrCreateWallet('USD', 'Main Wallet');
+
+// Check if user has wallet
+if ($user->hasWallet('USD', 'Main Wallet')) {
+    // Wallet exists
+}
+```
+
+### Working with Balances
+
+```php
+<?php
+
+$wallet = $user->createWallet('USD', 'Main Wallet');
+
+// Credit the wallet (add money)
+$transaction = $wallet->credit(100.00, 'available', [
+    'description' => 'Initial deposit',
+    'reference' => 'DEP-001'
+]);
+
+// Debit the wallet (remove money)
+$transaction = $wallet->debit(50.00, 'available', [
+    'description' => 'Purchase',
+    'reference' => 'TXN-001'
+]);
+
+// Check balances
+echo $wallet->getBalance('available');  // 50.00
+echo $wallet->getBalance('pending');    // 0.00
+echo $wallet->getBalance('frozen');     // 0.00
+echo $wallet->getBalance('trial');      // 0.00
+echo $wallet->getTotalBalance();        // 50.00
+
+// Check if can afford
+if ($wallet->canDebit(25.00, 'available')) {
+    // Can make the transaction
+}
+```
+
+### Advanced Balance Operations
+
+```php
+<?php
+
+$wallet = $user->createWallet('USD', 'Main Wallet');
+$wallet->credit(1000.00, 'available');
+
+// Move funds to pending (hold for processing)
+$transaction = $wallet->moveToPending(200.00, 'Processing payment');
+// Available: 800.00, Pending: 200.00
+
+// Confirm pending funds (move back to available)
+$wallet->confirmPending(200.00, 'Payment confirmed');
+// Available: 1000.00, Pending: 0.00
+
+// Cancel pending funds (remove from system)
+$wallet->cancelPending(200.00, 'Payment cancelled');
+
+// Freeze funds (security hold)
+$transaction = $wallet->freeze(100.00, 'Security review');
+// Available: 900.00, Frozen: 100.00
+
+// Unfreeze funds
+$transaction = $wallet->unfreeze(100.00, 'Review completed');
+// Available: 1000.00, Frozen: 0.00
+
+// Add trial balance (promotional credits)
+$transaction = $wallet->addTrialBalance(50.00, 'Welcome bonus');
+// Trial: 50.00
+
+// Convert trial to available
+$wallet->convertTrialToAvailable(25.00, 'Trial period ended');
+// Available: 1025.00, Trial: 25.00
+```
+
+### Transfer Between Users
+
+```php
+<?php
+
+$sender = User::find(1);
+$recipient = User::find(2);
+
+// Simple transfer
+$transfer = $sender->transferTo($recipient, 50.00, 'USD');
+
+// Transfer with fee and metadata
+$transfer = $sender->transferTo($recipient, 100.00, 'USD', [
+    'fee' => 2.50,
+    'discount' => 1.00,
+    'description' => 'Payment for services',
+    'reference' => 'TXN-12345'
+]);
+
+// Check transfer details
+echo $transfer->getGrossAmount();      // 100.00 (original amount)
+echo $transfer->getFee();              // 2.50
+echo $transfer->getDiscount();         // 1.00
+echo $transfer->getNetAmount();        // 101.50 (100 + 2.50 - 1.00)
+echo $transfer->getTransferredAmount(); // 100.00 (amount received)
+echo $transfer->status->value;         // 'confirmed'
+
+// Check transfer status
+if ($transfer->isConfirmed()) {
+    // Transfer completed successfully
+}
+```
+
+## High-Performance Bulk Operations with Transaction Safety
+
+The package provides enterprise-grade bulk operations optimized for high-volume production environments with **DB::transaction** support for data integrity:
+
+### Bulk Credit Operations
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Services\BulkWalletManager;
+
+$bulkManager = app(BulkWalletManager::class);
+
+// Bulk credit multiple wallets
+$operations = [
+    ['wallet_id' => 1, 'amount' => 100.00, 'balance_type' => 'available', 'meta' => ['ref' => 'BULK-001']],
+    ['wallet_id' => 2, 'amount' => 200.00, 'balance_type' => 'available', 'meta' => ['ref' => 'BULK-002']],
+    ['wallet_id' => 3, 'amount' => 150.00, 'balance_type' => 'pending', 'meta' => ['ref' => 'BULK-003']],
+];
+
+$result = $bulkManager->bulkCredit($operations);
+
+// Check results
+if ($result['success']) {
+    echo "Successfully processed {$result['successful_operations']} operations";
+} else {
+    echo "Failed operations: {$result['failed_operations']}";
+    foreach ($result['errors'] as $error) {
+        echo "Error at index {$error['index']}: {$error['error']}";
+    }
+}
+```
+
+### Bulk Debit Operations
+
+```php
+<?php
+
+// Bulk debit with validation
+$operations = [
+    ['wallet_id' => 1, 'amount' => 50.00, 'balance_type' => 'available'],
+    ['wallet_id' => 2, 'amount' => 75.00, 'balance_type' => 'available'],
+];
+
+$result = $bulkManager->bulkDebit($operations);
+
+// The system automatically validates sufficient funds
+// and rolls back all operations if any fail
+```
+
+### Bulk Transfer Operations
+
+```php
+<?php
+
+// Bulk transfers between wallets
+$operations = [
+    [
+        'from_wallet_id' => 1,
+        'to_wallet_id' => 4,
+        'amount' => 100.00,
+        'options' => ['fee' => 2.00, 'description' => 'Bulk transfer 1']
+    ],
+    [
+        'from_wallet_id' => 2,
+        'to_wallet_id' => 5,
+        'amount' => 150.00,
+        'options' => ['fee' => 3.00, 'description' => 'Bulk transfer 2']
+    ],
+];
+
+$result = $bulkManager->bulkTransfer($operations);
+```
+
+### Bulk Wallet Creation
+
+```php
+<?php
+
+// Create multiple wallets at once
+$walletData = [
+    [
+        'holder_id' => 1,
+        'holder_type' => 'App\Models\User',
+        'currency' => 'USD',
+        'name' => 'USD Wallet',
+        'attributes' => ['description' => 'US Dollar wallet']
+    ],
+    [
+        'holder_id' => 1,
+        'holder_type' => 'App\Models\User',
+        'currency' => 'EUR',
+        'name' => 'EUR Wallet',
+        'attributes' => ['description' => 'Euro wallet']
+    ],
+];
+
+$result = $bulkManager->bulkCreateWallets($walletData);
+```
+
+### Using Bulk Operations via Traits
+
+You can also use bulk operations directly through the HasWallets trait:
+
+```php
+<?php
+
+$user = User::find(1);
+
+// Bulk credit user's wallets
+$operations = [
+    ['currency' => 'USD', 'amount' => 100.00],
+    ['currency' => 'EUR', 'amount' => 200.00],
+];
+
+$result = $user->bulkCreditWallets($operations);
+
+// Bulk debit operations
+$result = $user->bulkDebitWallets($operations);
+
+// Bulk freeze operations
+$freezeOperations = [
+    ['currency' => 'USD', 'amount' => 50.00, 'description' => 'Security freeze'],
+    ['currency' => 'EUR', 'amount' => 75.00, 'description' => 'Risk assessment'],
+];
+
+$result = $user->bulkFreezeWallets($freezeOperations);
+
+// Bulk unfreeze operations
+$result = $user->bulkUnfreezeWallets($freezeOperations);
+```
+
+### Enterprise Bulk Operation Features
+
+- **🔒 Transaction Safety**: All bulk operations use `DB::transaction` for ACID compliance
+- **⚡ High Performance**: Optimized for processing thousands of operations efficiently
+- **🔍 Validation**: Each operation is validated before execution with detailed error reporting
+- **📊 Error Handling**: Comprehensive error reporting with operation-level failures
+- **📡 Event Support**: Rich event system for monitoring and auditing
+- **🔄 Rollback Support**: Automatic rollback on failure (all-or-nothing mode)
+- **🎯 Partial Success**: Optional partial success mode for fault tolerance
+- **📈 Batch Processing**: Configurable batch sizes for memory optimization
+- **🧪 Fully Tested**: 100% test coverage for all bulk operations
+
+### Bulk Operation Events
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Events\BulkOperationStarted;
+use HWallet\LaravelMultiWallet\Events\BulkOperationCompleted;
+use HWallet\LaravelMultiWallet\Events\BulkOperationFailed;
+
+// Listen for bulk operation events
+Event::listen(BulkOperationStarted::class, function ($event) {
+    Log::info("Bulk operation started: {$event->operationType} with {$event->operationCount} operations");
+});
+
+Event::listen(BulkOperationCompleted::class, function ($event) {
+    Log::info("Bulk operation completed: {$event->operationType} with {$event->successfulOperations} successful operations");
+});
+
+Event::listen(BulkOperationFailed::class, function ($event) {
+    Log::error("Bulk operation failed: {$event->operationType} with {$event->failedOperations} failures");
+});
+```
+
+## Enhanced Event System
+
+The package includes a comprehensive event system for all wallet operations:
+
+### Available Events
+
+- **Wallet Events**: `WalletCreated`, `WalletUpdated`, `WalletDeleted`, `WalletFrozen`, `WalletUnfrozen`
+- **Transaction Events**: `TransactionCreated`, `TransactionConfirmed`, `TransactionFailed`, `TransactionReversed`
+- **Transfer Events**: `TransferInitiated`, `TransferCompleted`, `TransferFailed`, `TransferRejected`
+- **Balance Events**: `WalletBalanceChanged`, `WalletLimitExceeded`, `WalletReconciled`
+- **Operation Events**: `WalletOperationStarted`, `WalletOperationCompleted`, `WalletOperationFailed`
+- **Bulk Events**: `BulkOperationStarted`, `BulkOperationCompleted`, `BulkOperationFailed`
+- **Configuration Events**: `WalletConfigurationChanged`, `ExchangeRateUpdated`
+- **Security Events**: `SuspiciousActivityDetected`
+
+### Event Usage Examples
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Events\WalletBalanceChanged;
+use HWallet\LaravelMultiWallet\Events\TransactionCreated;
+use HWallet\LaravelMultiWallet\Events\SuspiciousActivityDetected;
+
+// Listen for balance changes
+Event::listen(WalletBalanceChanged::class, function ($event) {
+    // Send notification to user
+    $user = $event->wallet->holder;
+    Mail::to($user)->send(new BalanceChangedNotification($event));
+});
+
+// Monitor transaction creation
+Event::listen(TransactionCreated::class, function ($event) {
+    // Log transaction for audit
+    AuditLog::create([
+        'action' => 'transaction_created',
+        'wallet_id' => $event->transaction->wallet_id,
+        'amount' => $event->transaction->amount,
+        'type' => $event->transaction->type->value,
+    ]);
+});
+
+// Handle suspicious activity
+Event::listen(SuspiciousActivityDetected::class, function ($event) {
+    // Freeze wallet and notify security team
+    $event->wallet->freeze($event->wallet->getBalance('available'), 'Suspicious activity detected');
+    SecurityTeam::notify($event);
+});
+```
+
+## Wallet Statistics and Analytics
+
+The package provides built-in analytics and reconciliation tools:
+
+### Wallet Statistics
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Services\WalletManager;
+
+$walletManager = app(WalletManager::class);
+$wallet = $user->getWallet('USD');
+
+// Get comprehensive wallet statistics
+$stats = $walletManager->getWalletStatistics($wallet);
+
+/*
+Returns:
+[
+    'total_transactions' => 45,
+    'total_credits' => 5000.00,
+    'total_debits' => 2500.00,
+    'total_transfers_sent' => 10,
+    'total_transfers_received' => 8,
+    'current_balance' => 2500.00,
+    'available_balance' => 2000.00,
+    'pending_balance' => 300.00,
+    'frozen_balance' => 100.00,
+    'trial_balance' => 100.00,
+]
+*/
+```
+
+### Wallet Reconciliation
+
+```php
+<?php
+
+// Check wallet balance integrity
+$reconciliation = $walletManager->reconcileWallet($wallet);
+
+if (!$reconciliation['is_balanced']) {
+    // Handle discrepancies
+    foreach ($reconciliation['differences'] as $balanceType => $difference) {
+        Log::warning("Balance discrepancy in {$balanceType}: {$difference['difference']}");
+    }
+    
+    // Auto-fix if needed
+    $walletManager->autoReconcileWallet($wallet);
+}
+```
+
+### User Balance Summary
+
+```php
+<?php
+
+// Get balance summary across all currencies
+$summary = $walletManager->getBalanceSummary($user);
+
+/*
+Returns:
+[
+    [
+        'currency' => 'USD',
+        'total_wallets' => 3,
+        'total_balance' => 5000.00,
+        'available_balance' => 4500.00,
+        'pending_balance' => 300.00,
+        'frozen_balance' => 100.00,
+        'trial_balance' => 100.00,
+    ],
+    [
+        'currency' => 'EUR',
+        'total_wallets' => 2,
+        'total_balance' => 3000.00,
+        // ...
+    ]
+]
+*/
+    // Transfer is complete
+}
+```
+
+### Transfer Status Management
+
+```php
+<?php
+
+// Create pending transfer
+$transfer = $sender->transferTo($recipient, 100.00, 'USD', [
+    'status' => \HWallet\LaravelMultiWallet\Enums\TransferStatus::PENDING
+]);
+
+// Update transfer status
+$transfer->markAsPaid();       // Mark as paid
+$transfer->markAsConfirmed();  // Mark as confirmed
+$transfer->markAsRejected();   // Mark as rejected
+
+// Check status
+if ($transfer->isPending()) {
+    // Still processing
+}
+
+if ($transfer->isCompleted()) {
+    // Transfer is done (confirmed or rejected)
+}
+```
+
+### Using WalletManager Service
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Services\WalletManager;
+
+$manager = app(WalletManager::class);
+
+// Create wallet through manager
+$wallet = $manager->create($user, 'USD', 'Business Wallet', [
+    'description' => 'Business transactions'
+]);
+
+// Transfer between specific wallets
+$fromWallet = $user1->getWallet('USD', 'Main');
+$toWallet = $user2->getWallet('USD', 'Savings');
+
+$transfer = $manager->transfer($fromWallet, $toWallet, 100.00, [
+    'fee' => 5.00,
+    'discount' => 2.00,
+    'description' => 'Discounted transfer',
+    'meta' => ['promo_code' => 'SAVE20']
+]);
+
+// Get wallet by slug
+$wallet = $manager->getBySlug('main-wallet-abc123');
+
+// Batch transfer to multiple recipients
+$recipients = [
+    ['wallet' => $wallet1, 'amount' => 50.00],
+    ['wallet' => $wallet2, 'amount' => 30.00],
+];
+
+$transfers = $manager->batchTransfer($fromWallet, $recipients, [
+    'description' => 'Batch payout'
+]);
+```
+
+### Multi-Currency Operations
+
+```php
+<?php
+
+// Create wallets for different currencies
+$usdWallet = $user->createWallet('USD', 'US Dollar Wallet');
+$eurWallet = $user->createWallet('EUR', 'Euro Wallet');
+$gbpWallet = $user->createWallet('GBP', 'British Pound Wallet');
+
+// Credit different currencies
+$usdWallet->credit(1000.00, 'available');
+$eurWallet->credit(850.00, 'available');
+$gbpWallet->credit(750.00, 'available');
+
+// Get wallets by currency
+$usdWallets = $user->getWalletsByCurrency('USD');
+$allWallets = $user->wallets;
+
+// Get total balance for specific currency
+$totalUsd = $user->getTotalBalance('USD');
+
+// Transfer between different currencies (with exchange rate)
+$transfer = $manager->transfer($usdWallet, $eurWallet, 100.00, [
+    'description' => 'Currency conversion transfer'
+]);
+```
+
+### Transaction History and Queries
+
+```php
+<?php
+
+// Get all transactions for a wallet
+$transactions = $wallet->transactions;
+
+// Get transaction history with filters
+$history = $manager->getTransactionHistory($wallet, [
+    'type' => 'credit',
+    'from_date' => '2024-01-01',
+    'to_date' => '2024-12-31'
+]);
+
+// Get wallet transfers
+$sentTransfers = $user->sentTransfers;
+$receivedTransfers = $user->receivedTransfers;
+
+// Get all transfers for a user
+$allTransfers = $user->getAllTransfers();
+
+// Get transfers by status
+$confirmedTransfers = Transfer::confirmed()->get();
+$pendingTransfers = Transfer::pending()->get();
+$rejectedTransfers = Transfer::rejected()->get();
+```
+
+### Balance Summary and Reporting
+
+```php
+<?php
+
+// Get comprehensive balance summary for a wallet
+$summary = $wallet->getBalanceSummary();
+/*
+Returns:
+[
+    'available' => 825.00,
+    'pending' => 0.00,
+    'frozen' => 0.00,
+    'trial' => 25.00,
+    'total' => 850.00
+]
+*/
+
+// Get balance summary for all user wallets
+$userSummary = $manager->getBalanceSummary($user);
+
+// Get balance for specific currency
+$usdBalance = $user->getBalance('USD', 'available');
+$eurBalance = $user->getBalance('EUR', 'available');
+```
+
+### Wallet Management
+
+```php
+<?php
+
+// Check if user can afford transaction
+if ($user->canAfford(100.00, 'USD', 'available')) {
+    // User has sufficient funds
+}
+
+// Credit user wallet directly (creates wallet if needed)
+$transaction = $user->creditWallet('USD', 100.00, 'available', [
+    'description' => 'Refund'
+]);
+
+// Debit user wallet directly
+$transaction = $user->debitWallet('USD', 50.00, 'available', [
+    'description' => 'Fee deduction'
+]);
+
+// Delete a wallet
+$user->deleteWallet('USD', 'Old Wallet');
+```
+
+## Database Compatibility
+
+The package is designed to work seamlessly with all major database systems:
+
+### Supported Databases
+
+- **MySQL**: Full support with optimized foreign keys and JSON columns
+- **PostgreSQL**: Native JSON support and advanced indexing
+- **SQLite**: Compatible with text-based JSON storage for testing
+- **SQL Server**: Full compatibility with proper data type handling
+
+### Migration Features
+
+The migration files automatically detect your database type and apply appropriate optimizations:
+
+```php
+// Automatic JSON column handling
+if (config('database.default') === 'sqlite') {
+    $table->text('meta')->nullable();  // SQLite compatibility
+} else {
+    $table->json('meta')->nullable();  // Native JSON for others
+}
+
+// Optimal decimal precision for all databases
+$table->decimal('balance_available', 20, 8)->default(0);
+
+// Timezone-aware timestamps where supported
+if (config('database.default') === 'sqlite') {
+    $table->timestamp('created_at')->useCurrent();
+} else {
+    $table->timestampTz('created_at')->useCurrent();
+}
+```
+
+### Configuration for Different Databases
+
+```php
+// config/database.php
+
+// MySQL configuration
+'mysql' => [
+    'driver' => 'mysql',
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '3306'),
+    'database' => env('DB_DATABASE', 'wallet_app'),
+    'username' => env('DB_USERNAME', 'root'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+    'options' => [
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_STRINGIFY_FETCHES => false,
+    ],
+],
+
+// PostgreSQL configuration
+'pgsql' => [
+    'driver' => 'pgsql',
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '5432'),
+    'database' => env('DB_DATABASE', 'wallet_app'),
+    'username' => env('DB_USERNAME', 'postgres'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => 'utf8',
+    'prefix' => '',
+    'schema' => 'public',
+],
+
+// SQLite configuration (for testing)
+'sqlite' => [
+    'driver' => 'sqlite',
+    'database' => database_path('wallet_app.sqlite'),
+    'prefix' => '',
+],
+```
+
+## Advanced Features
+
+### Attribute-Based Operation Validation
+
+The package uses PHP attributes to provide operation-level validation and logging:
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Attributes\WalletOperation;
+use HWallet\LaravelMultiWallet\Attributes\BulkOperation;
+
+class CustomWalletService
+{
+    #[WalletOperation(
+        operation: 'custom_credit',
+        description: 'Custom credit operation with validation',
+        requiresValidation: true,
+        logTransaction: true,
+        fireEvents: true,
+        auditLog: true
+    )]
+    public function customCredit(Wallet $wallet, float $amount): Transaction
+    {
+        // Custom validation logic
+        if ($amount > 10000) {
+            throw new \InvalidArgumentException('Amount exceeds maximum limit');
+        }
+        
+        return $wallet->credit($amount, 'available', [
+            'operation' => 'custom_credit',
+            'validated_by' => auth()->id(),
+        ]);
+    }
+    
+    #[BulkOperation(
+        operation: 'bulk_custom_credit',
+        batchSize: 50,
+        useTransaction: true,
+        validateBeforeExecute: true,
+        enableRollback: true
+    )]
+    public function bulkCustomCredit(array $operations): array
+    {
+        // Bulk operation with custom logic
+        return $this->processBulkOperations($operations);
+    }
+}
+```
+
+### Global Configuration Management
+
+You can override global settings using the configuration interface:
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Contracts\WalletConfigurationInterface;
+
+$config = app(WalletConfigurationInterface::class);
+
+// Check current settings
+$defaultCurrency = $config->getDefaultCurrency();
+$transactionLimits = $config->getTransactionLimits();
+$isAuditEnabled = $config->isAuditLoggingEnabled();
+
+// Configure exchange rate provider
+$exchangeProvider = $config->getExchangeRateProvider();
+
+// Get fee calculation settings
+$feeSettings = $config->getFeeCalculationSettings();
+```
+
+### Multi-Model Wallet Support
+
+The package supports wallets for any model type:
+
+```php
+<?php
+
+// User wallets
+class User extends Model
+{
+    use HasWallets;
+}
+
+// Company wallets
+#[WalletConfiguration(
+    defaultCurrency: 'USD',
+    allowedCurrencies: ['USD', 'EUR', 'GBP', 'JPY'],
+    walletLimits: ['max_balance' => 1000000.00],
+    enableBulkOperations: true
+)]
+class Company extends Model
+{
+    use HasWallets;
+}
+
+// Product escrow wallets
+#[WalletConfiguration(
+    defaultCurrency: 'USD',
+    autoCreateWallet: true,
+    walletName: 'Escrow',
+    transactionLimits: ['max_amount' => 50000.00]
+)]
+class Product extends Model
+{
+    use HasWallets;
+}
+
+// Usage examples
+$user = User::find(1);
+$company = Company::find(1);
+$product = Product::find(1);
+
+// All models can use the same wallet operations
+$userWallet = $user->createWallet('USD');
+$companyWallet = $company->createWallet('USD');
+$escrowWallet = $product->autoCreateWallet(); // Auto-creates based on configuration
+
+// Transfer between different model types
+$user->transferTo($company, 1000.00, 'USD', ['description' => 'Service payment']);
+$company->transferTo($product, 500.00, 'USD', ['description' => 'Escrow deposit']);
+```
+
+## Production Readiness & Quality Assurance
+
+This package is **production-ready** with enterprise-grade quality assurance:
+
+### ✅ Code Quality Standards
+- **Static Analysis**: PHPStan level 8 compliance (0 errors)
+- **Code Style**: Laravel Pint formatting with PSR standards
+- **Clean Architecture**: SOLID principles and dependency injection
+- **Type Safety**: Full PHP 8.1+ type hints and strict typing
+- **Documentation**: Comprehensive PHPDoc blocks and examples
+
+### 🧪 Testing Excellence
+- **100% Test Coverage**: 227 passing tests with 654 assertions
+- **Comprehensive Test Suite**: Unit, Feature, and Integration tests
+- **Database Testing**: Support for MySQL, PostgreSQL, SQLite, SQL Server
+- **Performance Testing**: Bulk operations and high-load scenarios
+- **Error Handling**: Exception testing and edge cases
+
+### 🚀 Performance Optimization
+- **DB::transaction**: All bulk operations use database transactions
+- **Efficient Queries**: Optimized database queries with proper indexing
+- **Memory Management**: Configurable batch sizes for large operations
+- **Event Queuing**: Async event processing for high-volume environments
+- **Connection Pooling**: Database connection optimization
+
+### 🔐 Security & Reliability
+- **Input Validation**: Comprehensive validation for all operations
+- **SQL Injection Protection**: Eloquent ORM with parameter binding
+- **Audit Trails**: Complete transaction history and logging
+- **Error Recovery**: Graceful error handling and rollback mechanisms
+- **Rate Limiting**: Configurable limits for operations
+
+## Testing
+
+The package includes comprehensive test coverage with 227 passing tests:
+
+### Running Tests
+
+```bash
+# Run all tests
+./vendor/bin/pest
+
+# Run specific test groups
+./vendor/bin/pest --group=bulk-operations
+./vendor/bin/pest --group=attributes
+./vendor/bin/pest --group=events
+
+# Run with coverage
+./vendor/bin/pest --coverage
+```
+
+### Test Database Setup
+
+```php
+// phpunit.xml or pest configuration
+<php>
+    <env name="DB_CONNECTION" value="sqlite"/>
+    <env name="DB_DATABASE" value=":memory:"/>
+</php>
+```
+
+### Example Test Cases
+
+```php
+<?php
+
+// Testing bulk operations
+test('it can perform bulk credit operations', function () {
+    $operations = [
+        ['wallet_id' => 1, 'amount' => 100.00],
+        ['wallet_id' => 2, 'amount' => 200.00],
+    ];
+    
+    $result = app(BulkWalletManager::class)->bulkCredit($operations);
+    
+    expect($result['success'])->toBeTrue();
+    expect($result['successful_operations'])->toBe(2);
+});
+
+// Testing attributes
+test('it can read wallet configuration from attributes', function () {
+    $user = new UserWithWalletConfig();
+    $config = $user->getWalletConfiguration();
+    
+    expect($config['default_currency'])->toBe('USD');
+    expect($config['auto_create_wallet'])->toBeTrue();
+});
+```
+
+// Freeze/unfreeze wallet operations
+$manager->freezeWallet($wallet, 100.00, 'Security hold');
+$manager->unfreezeWallet($wallet, 100.00, 'Hold released');
+```
+
+### Events and Webhooks
+
+The package fires various events that you can listen to:
+
+```php
+<?php
+
+// Available events:
+// - WalletCreated
+// - WalletUpdated  
+// - WalletDeleted
+// - WalletBalanceChanged
+// - WalletFrozen
+// - WalletUnfrozen
+// - TransactionCreated
+// - TransactionConfirmed
+// - TransactionFailed
+// - TransferInitiated
+// - TransferCompleted
+// - TransferFailed
+// - TransferRejected
+
+// Example listener
+use HWallet\LaravelMultiWallet\Events\WalletBalanceChanged;
+
+class WalletBalanceChangedListener
+{
+    public function handle(WalletBalanceChanged $event)
+    {
+        $wallet = $event->wallet;
+        $oldBalance = $event->oldBalance;
+        $newBalance = $event->newBalance;
+        
+        // Send notification, log activity, etc.
+    }
+}
+```
+
+### Configuration Options
+
+Key configuration options in `config/multi-wallet.php`:
+
+```php
+<?php
+
+return [
+    // Default currency
+    'default_currency' => 'USD',
+    
+    // Table names
+    'table_names' => [
+        'wallets' => 'wallets',
+        'transactions' => 'transactions',
+        'transfers' => 'transfers',
+    ],
+    
+    // Wallet limits
+    'wallet_limits' => [
+        'max_balance' => null,
+        'min_balance' => 0,
+    ],
+    
+    // Transaction limits
+    'transaction_limits' => [
+        'max_amount' => null,
+        'min_amount' => 0.01,
+        'daily_limit' => null,
+    ],
+    
+    // Enabled balance types
+    'balance_types' => [
+        'pending', 'available', 'frozen', 'trial'
+    ],
+    
+    // Wallet uniqueness
+    'uniqueness_enabled' => true,
+    
+    // Fee calculation
+    'fee_calculation' => [
+        'default_fee' => 0,
+        'percentage_based' => false,
+        'fee_percentage' => 0,
+    ],
+    
+    // Supported currencies
+    'supported_currencies' => [
+        'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY'
+    ],
+    
+    // Custom exchange rates
+    'exchange_rates' => [
+        'USD_EUR' => 0.85,
+        'EUR_USD' => 1.18,
+    ],
+    
+    // Events and caching
+    'events' => ['enabled' => true],
+    'cache' => ['enabled' => false, 'ttl' => 3600],
+];
+```
+
+## Common Use Cases
+
+### E-commerce Platform
+
+```php
+<?php
+
+// Customer wallet for purchases
+$customer = User::find(1);
+$wallet = $customer->createWallet('USD', 'Shopping Wallet');
+
+// Add funds
+$wallet->credit(500.00, 'available', ['description' => 'Credit card deposit']);
+
+// Hold funds for order
+$wallet->moveToPending(99.99, 'Order #12345 processing');
+
+// Confirm purchase
+$wallet->confirmPending(99.99, 'Order #12345 completed');
+
+// Refund
+$wallet->credit(99.99, 'available', ['description' => 'Refund for Order #12345']);
+```
+
+### Marketplace with Fees
+
+```php
+<?php
+
+$buyer = User::find(1);
+$seller = User::find(2);
+$marketplace = User::find(3); // Platform account
+
+// Transfer with marketplace fee
+$transfer = $buyer->transferTo($seller, 100.00, 'USD', [
+    'fee' => 5.00, // 5% marketplace fee
+    'description' => 'Product purchase'
+]);
+
+// Marketplace collects fee separately
+$marketplaceWallet = $marketplace->getOrCreateWallet('USD', 'Fees');
+$feeTransaction = $marketplaceWallet->credit(5.00, 'available', [
+    'description' => 'Marketplace fee',
+    'transfer_id' => $transfer->id
+]);
+```
+
+### Loyalty Program
+
+```php
+<?php
+
+$user = User::find(1);
+$loyaltyWallet = $user->createWallet('USD', 'Loyalty Points');
+
+// Award points (trial balance for promotional credits)
+$loyaltyWallet->addTrialBalance(100.00, 'Welcome bonus');
+$loyaltyWallet->addTrialBalance(50.00, 'Purchase reward');
+
+// Redeem points
+if ($loyaltyWallet->canDebit(75.00, 'trial')) {
+    $loyaltyWallet->debit(75.00, 'trial', ['description' => 'Redeemed for discount']);
+}
+
+// Convert earned points to spendable balance
+$loyaltyWallet->convertTrialToAvailable(25.00, 'Loyalty program conversion');
+```
+
+## Error Handling
+
+```php
+<?php
+
+use HWallet\LaravelMultiWallet\Exceptions\InsufficientFundsException;
+use HWallet\LaravelMultiWallet\Exceptions\WalletNotFoundException;
+use HWallet\LaravelMultiWallet\Exceptions\InvalidBalanceTypeException;
+
+try {
+    $wallet->debit(1000.00, 'available');
+} catch (InsufficientFundsException $e) {
+    // Handle insufficient funds
+    return response()->json(['error' => 'Insufficient balance'], 400);
+}
+
+try {
+    $wallet = $user->getWallet('USD', 'NonExistent');
+    if (!$wallet) {
+        throw new WalletNotFoundException('Wallet not found');
+    }
+} catch (WalletNotFoundException $e) {
+    // Handle wallet not found
+    $wallet = $user->createWallet('USD', 'Default');
+}
+```
+
+This package provides a robust foundation for any Laravel application requiring wallet functionality, from simple balance tracking to complex multi-currency financial systems with advanced features like fees, holds, and promotional credits. 

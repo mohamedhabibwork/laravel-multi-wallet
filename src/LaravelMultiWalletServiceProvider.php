@@ -85,8 +85,17 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
             return new WalletManager($app[WalletConfigurationInterface::class]);
         });
 
+        // Register the bulk wallet manager service
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Services\BulkWalletManager::class, function ($app) {
+            return new \HWallet\LaravelMultiWallet\Services\BulkWalletManager(
+                $app[WalletConfigurationInterface::class],
+                $app[WalletManager::class]
+            );
+        });
+
         // Register aliases for easier access
         $this->app->alias(WalletManager::class, 'wallet-manager');
+        $this->app->alias(\HWallet\LaravelMultiWallet\Services\BulkWalletManager::class, 'bulk-wallet-manager');
         $this->app->alias(WalletConfigurationInterface::class, 'wallet-config');
         $this->app->alias(ExchangeRateProviderInterface::class, 'exchange-rate-provider');
         $this->app->alias(WalletRepositoryInterface::class, 'wallet-repository');

@@ -11,16 +11,39 @@ return new class extends Migration
         Schema::create(config('multi-wallet.table_names.transactions'), function (Blueprint $table) {
             $table->id();
             $table->morphs('payable');
-            $table->foreignId('wallet_id')->constrained(config('multi-wallet.table_names.wallets'));
-            $table->string('type'); // Changed from enum to string
-            $table->decimal('amount', 64, 8);
-            $table->string('balance_type'); // Changed from enum to string
+
+            // Handle foreign key for different database types
+            if (config('database.default') === 'sqlite') {
+                $table->unsignedBigInteger('wallet_id');
+                $table->index('wallet_id');
+            } else {
+                $table->foreignId('wallet_id')->constrained(config('multi-wallet.table_names.wallets'));
+            }
+
+            $table->string('type'); // Changed from enum to string for compatibility
+            $table->decimal('amount', 20, 8); // Use precision/scale that works across all database types
+            $table->string('balance_type'); // Changed from enum to string for compatibility
             $table->boolean('confirmed')->default(false);
-            $table->json('meta')->nullable();
+
+            // Handle JSON column for different database types
+            if (config('database.default') === 'sqlite') {
+                $table->text('meta')->nullable();
+            } else {
+                $table->json('meta')->nullable();
+            }
+
             $table->string('uuid')->unique();
-            $table->timestampTz('created_at')->useCurrent()->index();
-            $table->timestampTz('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->softDeletesTz()->index();
+
+            // Handle timestamps for different database types
+            if (config('database.default') === 'sqlite') {
+                $table->timestamp('created_at')->useCurrent()->index();
+                $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+                $table->softDeletes()->index();
+            } else {
+                $table->timestampTz('created_at')->useCurrent()->index();
+                $table->timestampTz('updated_at')->useCurrent()->useCurrentOnUpdate();
+                $table->softDeletesTz()->index();
+            }
 
             $table->index(['wallet_id', 'type']);
             $table->index(['wallet_id', 'balance_type']);

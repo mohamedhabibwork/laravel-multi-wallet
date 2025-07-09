@@ -43,8 +43,8 @@ class EloquentWalletRepository implements WalletRepositoryInterface
      */
     public function findByHolderAndCurrency(Model $holder, string $currency, ?string $name = null): ?Wallet
     {
-        $cacheKey = "wallet.holder.{$holder->getKey()}.{$currency}." . ($name ?? 'default');
-        
+        $cacheKey = "wallet.holder.{$holder->getKey()}.{$currency}.".($name ?? 'default');
+
         return Cache::remember($cacheKey, 300, function () use ($holder, $currency, $name) {
             $query = Wallet::byHolder($holder)->byCurrency($currency);
 
@@ -64,10 +64,10 @@ class EloquentWalletRepository implements WalletRepositoryInterface
     public function create(array $attributes): Wallet
     {
         $wallet = Wallet::create($attributes);
-        
+
         // Clear relevant caches
         $this->clearHolderCache($wallet);
-        
+
         return $wallet;
     }
 
@@ -77,12 +77,12 @@ class EloquentWalletRepository implements WalletRepositoryInterface
     public function update(Wallet $wallet, array $attributes): bool
     {
         $result = $wallet->update($attributes);
-        
+
         // Clear caches
         Cache::forget("wallet.{$wallet->id}");
         Cache::forget("wallet.slug.{$wallet->slug}");
         $this->clearHolderCache($wallet);
-        
+
         return $result;
     }
 
@@ -92,12 +92,12 @@ class EloquentWalletRepository implements WalletRepositoryInterface
     public function delete(Wallet $wallet): bool
     {
         $result = $wallet->delete();
-        
+
         // Clear caches
         Cache::forget("wallet.{$wallet->id}");
         Cache::forget("wallet.slug.{$wallet->slug}");
         $this->clearHolderCache($wallet);
-        
+
         return $result;
     }
 
@@ -187,7 +187,7 @@ class EloquentWalletRepository implements WalletRepositoryInterface
     public function getStatistics(Model $holder): array
     {
         $cacheKey = "wallet.stats.{$holder->getKey()}";
-        
+
         return Cache::remember($cacheKey, 600, function () use ($holder) {
             return DB::table('wallets')
                 ->where('holder_type', get_class($holder))
@@ -212,12 +212,12 @@ class EloquentWalletRepository implements WalletRepositoryInterface
     public function bulkUpdate(array $walletIds, array $attributes): int
     {
         $result = Wallet::whereIn('id', $walletIds)->update($attributes);
-        
+
         // Clear caches for updated wallets
         foreach ($walletIds as $id) {
             Cache::forget("wallet.{$id}");
         }
-        
+
         return $result;
     }
 

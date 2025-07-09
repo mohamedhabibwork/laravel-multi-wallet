@@ -2,7 +2,6 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-
 use InvalidArgumentException;
 
 /**
@@ -16,15 +15,15 @@ class Currency
     {
         $code = strtoupper(trim($currency));
 
-        if (!preg_match('/^[A-Z]{3}$/', $code)) {
+        if (! preg_match('/^[A-Z]{3}$/', $code)) {
             throw new InvalidArgumentException('Invalid currency code format');
         }
 
         $supportedCurrencies = config('multi-wallet.supported_currencies', [
-            'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY'
+            'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY',
         ]);
 
-        if (!in_array($code, $supportedCurrencies)) {
+        if (! in_array($code, $supportedCurrencies)) {
             throw new InvalidArgumentException("Unsupported currency: {$code}");
         }
 

@@ -2,11 +2,6 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-use HWallet\LaravelMultiWallet\Enums\BalanceType;
-use HWallet\LaravelMultiWallet\Enums\TransactionType;
-use HWallet\LaravelMultiWallet\Enums\TransferStatus;
-use InvalidArgumentException;
-
 /**
  * Strict type definitions for wallet operations
  */
@@ -84,4 +79,3 @@ class WalletTypes
         return new WalletConfiguration($config);
     }
 }
-

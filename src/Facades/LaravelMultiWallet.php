@@ -2,15 +2,15 @@
 
 namespace HWallet\LaravelMultiWallet\Facades;
 
+use HWallet\LaravelMultiWallet\Helpers\WalletHelpers;
 use HWallet\LaravelMultiWallet\Models\Transfer;
 use HWallet\LaravelMultiWallet\Models\Wallet;
-use HWallet\LaravelMultiWallet\Services\WalletManager;
 use HWallet\LaravelMultiWallet\Services\BulkWalletManager;
-use HWallet\LaravelMultiWallet\Services\WalletFactory;
-use HWallet\LaravelMultiWallet\Helpers\WalletHelpers;
-use HWallet\LaravelMultiWallet\Utils\WalletUtils;
-use HWallet\LaravelMultiWallet\Types\WalletTypes;
 use HWallet\LaravelMultiWallet\Services\Validators\WalletValidator;
+use HWallet\LaravelMultiWallet\Services\WalletFactory;
+use HWallet\LaravelMultiWallet\Services\WalletManager;
+use HWallet\LaravelMultiWallet\Types\WalletTypes;
+use HWallet\LaravelMultiWallet\Utils\WalletUtils;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 
@@ -412,7 +412,7 @@ class LaravelMultiWallet extends Facade
     /**
      * Perform bulk operations with progress tracking
      */
-    public static function performBulkOperationSafe(array $wallets, string $operation, array $parameters = [], callable $progressCallback = null)
+    public static function performBulkOperationSafe(array $wallets, string $operation, array $parameters = [], ?callable $progressCallback = null)
     {
         return static::getIntegrationService()->performBulkOperation($wallets, $operation, $parameters, $progressCallback);
     }

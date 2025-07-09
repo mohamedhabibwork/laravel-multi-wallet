@@ -35,4 +35,3 @@ class WalletId
         return (string) $this->id;
     }
 }
-

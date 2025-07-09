@@ -44,11 +44,9 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
         Transfer::observe(TransferObserver::class);
     }
 
-
-
     public function packageRegistered(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/multi-wallet.php', 'multi-wallet');
+        $this->mergeConfigFrom(__DIR__.'/../config/multi-wallet.php', 'multi-wallet');
 
         // Register contracts
         $this->app->bind(\HWallet\LaravelMultiWallet\Contracts\WalletInterface::class, Wallet::class);
@@ -134,7 +132,7 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
     {
         // Register helper service as singleton
         $this->app->singleton(\HWallet\LaravelMultiWallet\Helpers\WalletHelpers::class);
-        
+
         // Load global helper functions file
         $this->loadHelperFunctions();
     }
@@ -144,7 +142,7 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
      */
     protected function loadHelperFunctions(): void
     {
-        $helperFile = __DIR__ . '/helpers.php';
+        $helperFile = __DIR__.'/helpers.php';
         if (file_exists($helperFile)) {
             require_once $helperFile;
         }

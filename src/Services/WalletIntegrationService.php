@@ -49,12 +49,12 @@ class WalletIntegrationService
             'currency' => $currency,
             'name' => $name,
             'metadata' => $metadata,
-            'configuration' => $configuration
+            'configuration' => $configuration,
         ]);
 
-        if (!$validationResult->isValid()) {
+        if (! $validationResult->isValid()) {
             throw new \InvalidArgumentException(
-                'Wallet creation validation failed: ' . implode(', ', $validationResult->getErrors())
+                'Wallet creation validation failed: '.implode(', ', $validationResult->getErrors())
             );
         }
 
@@ -67,7 +67,7 @@ class WalletIntegrationService
             );
 
             // Apply configuration if provided
-            if (!empty($configType->getConfig())) {
+            if (! empty($configType->getConfig())) {
                 $this->applyConfiguration($wallet, $configType);
             }
 
@@ -77,7 +77,7 @@ class WalletIntegrationService
                 'holder_type' => get_class($holder),
                 'holder_id' => $holder->getKey(),
                 'currency' => $currencyType->getCode(),
-                'name' => $name
+                'name' => $name,
             ]);
 
             return $wallet;
@@ -104,12 +104,12 @@ class WalletIntegrationService
             'type' => $type,
             'amount' => $amount,
             'balance_type' => $balanceType,
-            'metadata' => $metadata
+            'metadata' => $metadata,
         ]);
 
-        if (!$validationResult->isValid()) {
+        if (! $validationResult->isValid()) {
             throw new \InvalidArgumentException(
-                'Transaction validation failed: ' . implode(', ', $validationResult->getErrors())
+                'Transaction validation failed: '.implode(', ', $validationResult->getErrors())
             );
         }
 
@@ -125,12 +125,12 @@ class WalletIntegrationService
 
             // Run integrity check
             $integrityResult = $this->utils->validateWalletIntegrity($wallet);
-            
-            if (!$integrityResult['valid']) {
+
+            if (! $integrityResult['valid']) {
                 Log::warning('Wallet integrity check failed after transaction', [
                     'wallet_id' => $wallet->id,
                     'transaction_id' => $transaction->id,
-                    'issues' => $integrityResult['issues']
+                    'issues' => $integrityResult['issues'],
                 ]);
             }
 
@@ -138,7 +138,7 @@ class WalletIntegrationService
                 'transaction' => $transaction,
                 'summary' => $summary,
                 'integrity' => $integrityResult,
-                'wallet_state' => $this->getWalletState($wallet)
+                'wallet_state' => $this->getWalletState($wallet),
             ];
         });
     }
@@ -150,12 +150,12 @@ class WalletIntegrationService
     {
         $wallets = $this->repository->getWalletsWithTransactions($holder);
         $statistics = $this->repository->getStatistics($holder);
-        
+
         $dashboard = [
             'wallets' => [],
             'statistics' => $statistics,
             'health_check' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         foreach ($wallets as $wallet) {
@@ -164,7 +164,7 @@ class WalletIntegrationService
                 'formatted_balances' => $this->getFormattedBalances($wallet),
                 'recent_transactions' => $wallet->transactions,
                 'performance_metrics' => $this->utils->getWalletPerformanceMetrics($wallet),
-                'health_status' => $this->utils->checkWalletHealth($wallet)
+                'health_status' => $this->utils->checkWalletHealth($wallet),
             ];
 
             $dashboard['wallets'][] = $walletData;
@@ -184,7 +184,7 @@ class WalletIntegrationService
         array $wallets,
         string $operation,
         array $parameters = [],
-        callable $progressCallback = null
+        ?callable $progressCallback = null
     ): array {
         $results = [];
         $errors = [];
@@ -204,18 +204,18 @@ class WalletIntegrationService
                 $results[] = [
                     'wallet_id' => $wallet->id,
                     'success' => true,
-                    'result' => $result
+                    'result' => $result,
                 ];
 
             } catch (\Exception $e) {
                 $errors[] = [
                     'wallet_id' => $wallet->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
 
             $processed++;
-            
+
             if ($progressCallback) {
                 $progressCallback($processed, $total);
             }
@@ -227,7 +227,7 @@ class WalletIntegrationService
             'successful' => count($results),
             'failed' => count($errors),
             'results' => $results,
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 
@@ -252,29 +252,29 @@ class WalletIntegrationService
     {
         // Validate search criteria
         $validationResult = $this->validator->validateSearchCriteria($criteria);
-        
-        if (!$validationResult->isValid()) {
+
+        if (! $validationResult->isValid()) {
             throw new \InvalidArgumentException(
-                'Search criteria validation failed: ' . implode(', ', $validationResult->getErrors())
+                'Search criteria validation failed: '.implode(', ', $validationResult->getErrors())
             );
         }
 
         $wallets = $this->repository->search($criteria);
-        
+
         $results = [];
         foreach ($wallets as $wallet) {
             $results[] = [
                 'wallet' => $wallet,
                 'formatted_balance' => $this->helpers->formatAmount($wallet->getTotalBalance(), $wallet->currency),
                 'status' => $this->getWalletStatus($wallet),
-                'last_activity' => $wallet->transactions()->latest()->first()?->created_at
+                'last_activity' => $wallet->transactions()->latest()->first()?->created_at,
             ];
         }
 
         return [
             'total' => count($results),
             'results' => $results,
-            'criteria' => $criteria
+            'criteria' => $criteria,
         ];
     }
 
@@ -290,7 +290,7 @@ class WalletIntegrationService
             'basic_stats' => $this->utils->getWalletStats($wallet),
             'transaction_analysis' => $this->analyzeTransactionPatterns($wallet, $period),
             'balance_history' => $this->getBalanceHistory($wallet, $period),
-            'performance_metrics' => $this->utils->getWalletPerformanceMetrics($wallet)
+            'performance_metrics' => $this->utils->getWalletPerformanceMetrics($wallet),
         ];
 
         if ($includeProjections) {
@@ -307,8 +307,8 @@ class WalletIntegrationService
     {
         // Apply configuration settings to wallet
         $config = $configType->getConfig();
-        
-        if (!empty($config)) {
+
+        if (! empty($config)) {
             $wallet->update(['meta' => array_merge($wallet->meta ?? [], ['config' => $config])]);
         }
     }
@@ -320,7 +320,7 @@ class WalletIntegrationService
             'type' => $transaction->type,
             'amount' => $this->helpers->formatAmount($transaction->amount, $wallet->currency),
             'balance_after' => $this->helpers->formatAmount($wallet->getTotalBalance(), $wallet->currency),
-            'timestamp' => $transaction->created_at->toISOString()
+            'timestamp' => $transaction->created_at->toISOString(),
         ];
     }
 
@@ -331,7 +331,7 @@ class WalletIntegrationService
             'pending' => $wallet->getBalance('pending'),
             'frozen' => $wallet->getBalance('frozen'),
             'trial' => $wallet->getBalance('trial'),
-            'total' => $wallet->getTotalBalance()
+            'total' => $wallet->getTotalBalance(),
         ]);
 
         return [
@@ -339,7 +339,7 @@ class WalletIntegrationService
             'currency' => $wallet->currency,
             'balances' => $balanceSummary->getAllBalances(),
             'formatted_balances' => $this->getFormattedBalances($wallet),
-            'status' => $this->getWalletStatus($wallet)
+            'status' => $this->getWalletStatus($wallet),
         ];
     }
 
@@ -350,7 +350,7 @@ class WalletIntegrationService
             'pending' => $this->helpers->formatAmount($wallet->getBalance('pending'), $wallet->currency),
             'frozen' => $this->helpers->formatAmount($wallet->getBalance('frozen'), $wallet->currency),
             'trial' => $this->helpers->formatAmount($wallet->getBalance('trial'), $wallet->currency),
-            'total' => $this->helpers->formatAmount($wallet->getTotalBalance(), $wallet->currency)
+            'total' => $this->helpers->formatAmount($wallet->getTotalBalance(), $wallet->currency),
         ];
     }
 
@@ -379,12 +379,12 @@ class WalletIntegrationService
             $wallet = $walletData['wallet'];
             $health = $walletData['health_status'];
 
-            if (!$health['healthy']) {
+            if (! $health['healthy']) {
                 $recommendations[] = [
                     'wallet_id' => $wallet->id,
                     'type' => 'health_issue',
                     'message' => 'Wallet health check failed',
-                    'issues' => $health['issues']
+                    'issues' => $health['issues'],
                 ];
             }
 
@@ -393,7 +393,7 @@ class WalletIntegrationService
                     'wallet_id' => $wallet->id,
                     'type' => 'pending_balance',
                     'message' => 'Consider confirming pending transactions',
-                    'amount' => $wallet->getBalance('pending')
+                    'amount' => $wallet->getBalance('pending'),
                 ];
             }
         }
@@ -404,6 +404,7 @@ class WalletIntegrationService
     private function updateWalletMetadata(WalletInterface $wallet, array $metadata): bool
     {
         $metadataType = WalletTypes::createWalletMetadata($metadata);
+
         return $wallet->update(['meta' => array_merge($wallet->meta ?? [], $metadataType->getData())]);
     }
 
@@ -423,7 +424,7 @@ class WalletIntegrationService
             'credits' => $transactions->where('type', 'credit')->count(),
             'debits' => $transactions->where('type', 'debit')->count(),
             'average_amount' => $transactions->avg('amount'),
-            'total_volume' => $transactions->sum('amount')
+            'total_volume' => $transactions->sum('amount'),
         ];
     }
 
@@ -433,7 +434,7 @@ class WalletIntegrationService
         // For now, return current balance
         return [
             'current' => $wallet->getTotalBalance(),
-            'history' => [] // Would be populated from balance history table
+            'history' => [], // Would be populated from balance history table
         ];
     }
 
@@ -445,7 +446,7 @@ class WalletIntegrationService
         return [
             'projected_30_days' => $wallet->getTotalBalance() + ($avgDaily * 30),
             'projected_90_days' => $wallet->getTotalBalance() + ($avgDaily * 90),
-            'confidence' => $transactionAnalysis['total_transactions'] > 10 ? 'high' : 'low'
+            'confidence' => $transactionAnalysis['total_transactions'] > 10 ? 'high' : 'low',
         ];
     }
-} 
+}

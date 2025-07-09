@@ -2,8 +2,6 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-
-
 use InvalidArgumentException;
 
 /**
@@ -37,4 +35,3 @@ class TransferId
         return (string) $this->id;
     }
 }
-

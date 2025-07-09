@@ -80,7 +80,7 @@ class Wallet extends Model implements WalletInterface
     public function scopeByHolder($query, Model $holder)
     {
         return $query->where('holder_type', get_class($holder))
-                    ->where('holder_id', $holder->getKey());
+            ->where('holder_id', $holder->getKey());
     }
 
     public function scopeByCurrency($query, string $currency)

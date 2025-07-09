@@ -5,9 +5,9 @@ namespace HWallet\LaravelMultiWallet\Services;
 use HWallet\LaravelMultiWallet\Contracts\ExchangeRateProviderInterface;
 use HWallet\LaravelMultiWallet\Contracts\WalletConfigurationInterface;
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
-use HWallet\LaravelMultiWallet\Models\Wallet;
 use HWallet\LaravelMultiWallet\Models\Transaction;
 use HWallet\LaravelMultiWallet\Models\Transfer;
+use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 
@@ -330,6 +330,7 @@ class WalletConfiguration implements WalletConfigurationInterface
     public function getExchangeRate(string $from, string $to): float
     {
         $key = "{$from}_{$to}";
+
         return $this->config['exchange_rates'][$key] ?? 1.0;
     }
 
@@ -498,12 +499,12 @@ class WalletConfiguration implements WalletConfigurationInterface
      */
     public function getCached(string $key, $default = null)
     {
-        if (!$this->isCachingEnabled()) {
+        if (! $this->isCachingEnabled()) {
             return $this->get($key, $default);
         }
 
-        $cacheKey = $this->getCachePrefix() . '.config.' . $key;
-        
+        $cacheKey = $this->getCachePrefix().'.config.'.$key;
+
         return Cache::remember($cacheKey, $this->getCacheTTL(), function () use ($key, $default) {
             return $this->get($key, $default);
         });
@@ -515,7 +516,7 @@ class WalletConfiguration implements WalletConfigurationInterface
     public function clearCache(): void
     {
         if ($this->isCachingEnabled()) {
-            Cache::forget($this->getCachePrefix() . '.config.*');
+            Cache::forget($this->getCachePrefix().'.config.*');
         }
     }
 
@@ -527,14 +528,14 @@ class WalletConfiguration implements WalletConfigurationInterface
         $errors = [];
 
         // Validate default currency
-        if (!$this->isCurrencySupported($this->getDefaultCurrency())) {
+        if (! $this->isCurrencySupported($this->getDefaultCurrency())) {
             $errors[] = "Default currency '{$this->getDefaultCurrency()}' is not supported.";
         }
 
         // Validate balance limits
         $maxBalance = $this->getMaxBalanceLimit();
         $minBalance = $this->getMinBalanceLimit();
-        
+
         if ($maxBalance !== null && $minBalance > $maxBalance) {
             $errors[] = "Minimum balance ({$minBalance}) cannot be greater than maximum balance ({$maxBalance}).";
         }
@@ -542,14 +543,14 @@ class WalletConfiguration implements WalletConfigurationInterface
         // Validate transaction limits
         $maxTransaction = $this->getMaxTransactionAmount();
         $minTransaction = $this->getMinTransactionAmount();
-        
+
         if ($maxTransaction !== null && $minTransaction > $maxTransaction) {
             $errors[] = "Minimum transaction amount ({$minTransaction}) cannot be greater than maximum transaction amount ({$maxTransaction}).";
         }
 
         // Validate model classes
         foreach ($this->getModels() as $type => $class) {
-            if (!class_exists($class)) {
+            if (! class_exists($class)) {
                 $errors[] = "Model class '{$class}' for type '{$type}' does not exist.";
             }
         }

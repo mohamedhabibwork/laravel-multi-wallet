@@ -2,8 +2,8 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-use InvalidArgumentException;
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
+use InvalidArgumentException;
 
 /**
  * Wallet configuration value object
@@ -105,6 +105,7 @@ class WalletConfiguration
     public function isBalanceTypeEnabled(BalanceType|string $balanceType): bool
     {
         $balanceTypeValue = $balanceType instanceof BalanceType ? $balanceType->value : $balanceType;
+
         return in_array($balanceTypeValue, $this->getBalanceTypes());
     }
 
@@ -282,7 +283,7 @@ class WalletConfiguration
     {
         $globalConfig = self::fromGlobalConfig();
         $globalConfig->merge($walletConfig);
-        
+
         return $globalConfig;
     }
 
@@ -314,7 +315,7 @@ class WalletConfiguration
         if (isset($config['balance_types']) && is_array($config['balance_types'])) {
             $validTypes = BalanceType::toArray();
             foreach ($config['balance_types'] as $type) {
-                if (!in_array($type, $validTypes)) {
+                if (! in_array($type, $validTypes)) {
                     throw new InvalidArgumentException("Invalid balance type: {$type}");
                 }
             }
@@ -325,8 +326,8 @@ class WalletConfiguration
             if (isset($config['fee_configuration']['default_fee']) && $config['fee_configuration']['default_fee'] < 0) {
                 throw new InvalidArgumentException('Default fee cannot be negative');
             }
-            
-            if (isset($config['fee_configuration']['fee_percentage']) && 
+
+            if (isset($config['fee_configuration']['fee_percentage']) &&
                 ($config['fee_configuration']['fee_percentage'] < 0 || $config['fee_configuration']['fee_percentage'] > 100)) {
                 throw new InvalidArgumentException('Fee percentage must be between 0 and 100');
             }
@@ -337,7 +338,7 @@ class WalletConfiguration
             if (isset($config['security_settings']['max_failed_attempts']) && $config['security_settings']['max_failed_attempts'] < 1) {
                 throw new InvalidArgumentException('Maximum failed attempts must be at least 1');
             }
-            
+
             if (isset($config['security_settings']['lockout_duration']) && $config['security_settings']['lockout_duration'] < 0) {
                 throw new InvalidArgumentException('Lockout duration cannot be negative');
             }

@@ -7,6 +7,11 @@ on:
       - 'phpstan.neon.dist'
       - '.github/workflows/phpstan.yml'
 
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 jobs:
   phpstan:
     name: phpstan
@@ -23,6 +28,9 @@ jobs:
 
       - name: Install composer dependencies
         uses: ramsey/composer-install@v3
+
+      - name: Fix executable permissions
+        run: chmod +x vendor/bin/phpstan
 
       - name: Run PHPStan
         run: ./vendor/bin/phpstan --error-format=github

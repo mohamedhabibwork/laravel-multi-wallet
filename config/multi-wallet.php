@@ -15,6 +15,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Models
+    |--------------------------------------------------------------------------
+    |
+    | Configure the Eloquent models used by the package. You can extend these
+    | models or replace them with your own implementations.
+    |
+    */
+    'models' => [
+        'wallet' => \HWallet\LaravelMultiWallet\Models\Wallet::class,
+        'transaction' => \HWallet\LaravelMultiWallet\Models\Transaction::class,
+        'transfer' => \HWallet\LaravelMultiWallet\Models\Transfer::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Table Names
     |--------------------------------------------------------------------------
     |
@@ -188,7 +203,82 @@ return [
     'events' => [
         'enabled' => env('WALLET_EVENTS_ENABLED', true),
         'listeners' => [
-            // Add custom event listeners here
+            // LogWalletActivity - Logs all wallet operations for audit trail
+            \HWallet\LaravelMultiWallet\Listeners\LogWalletActivity::class,
+            // SendWebhookNotification - Sends webhook notifications for wallet events
+            \HWallet\LaravelMultiWallet\Listeners\SendWebhookNotification::class,
+        ],
+        'available_events' => [
+            // Bulk Operation Events
+            'bulk_operation_started' => \HWallet\LaravelMultiWallet\Events\BulkOperationStarted::class,
+            'bulk_operation_completed' => \HWallet\LaravelMultiWallet\Events\BulkOperationCompleted::class,
+            'bulk_operation_failed' => \HWallet\LaravelMultiWallet\Events\BulkOperationFailed::class,
+            
+            // Exchange Rate Events
+            'exchange_rate_updated' => \HWallet\LaravelMultiWallet\Events\ExchangeRateUpdated::class,
+            
+            // Security Events
+            'suspicious_activity_detected' => \HWallet\LaravelMultiWallet\Events\SuspiciousActivityDetected::class,
+            
+            // Transaction Events
+            'transaction_created' => \HWallet\LaravelMultiWallet\Events\TransactionCreated::class,
+            'transaction_confirmed' => \HWallet\LaravelMultiWallet\Events\TransactionConfirmed::class,
+            'transaction_failed' => \HWallet\LaravelMultiWallet\Events\TransactionFailed::class,
+            'transaction_reversed' => \HWallet\LaravelMultiWallet\Events\TransactionReversed::class,
+            
+            // Transfer Events
+            'transfer_initiated' => \HWallet\LaravelMultiWallet\Events\TransferInitiated::class,
+            'transfer_pending' => \HWallet\LaravelMultiWallet\Events\TransferPending::class,
+            'transfer_completed' => \HWallet\LaravelMultiWallet\Events\TransferCompleted::class,
+            'transfer_failed' => \HWallet\LaravelMultiWallet\Events\TransferFailed::class,
+            'transfer_rejected' => \HWallet\LaravelMultiWallet\Events\TransferRejected::class,
+            
+            // Wallet Events
+            'wallet_created' => \HWallet\LaravelMultiWallet\Events\WalletCreated::class,
+            'wallet_updated' => \HWallet\LaravelMultiWallet\Events\WalletUpdated::class,
+            'wallet_deleted' => \HWallet\LaravelMultiWallet\Events\WalletDeleted::class,
+            'wallet_balance_changed' => \HWallet\LaravelMultiWallet\Events\WalletBalanceChanged::class,
+            'wallet_frozen' => \HWallet\LaravelMultiWallet\Events\WalletFrozen::class,
+            'wallet_unfrozen' => \HWallet\LaravelMultiWallet\Events\WalletUnfrozen::class,
+            'wallet_limit_exceeded' => \HWallet\LaravelMultiWallet\Events\WalletLimitExceeded::class,
+            'wallet_reconciled' => \HWallet\LaravelMultiWallet\Events\WalletReconciled::class,
+            'wallet_configuration_changed' => \HWallet\LaravelMultiWallet\Events\WalletConfigurationChanged::class,
+            
+            // Wallet Operation Events
+            'wallet_operation_started' => \HWallet\LaravelMultiWallet\Events\WalletOperationStarted::class,
+            'wallet_operation_completed' => \HWallet\LaravelMultiWallet\Events\WalletOperationCompleted::class,
+            'wallet_operation_failed' => \HWallet\LaravelMultiWallet\Events\WalletOperationFailed::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Wallet Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure default wallet configuration settings that can be overridden
+    | using attributes or per-wallet configuration.
+    |
+    */
+    'wallet_configuration' => [
+        'auto_create_wallet' => env('WALLET_AUTO_CREATE', true),
+        'default_wallet_name' => env('WALLET_DEFAULT_NAME', 'default'),
+        'enable_events' => env('WALLET_ENABLE_EVENTS', true),
+        'enable_audit_log' => env('WALLET_ENABLE_AUDIT_LOG', true),
+        'enable_bulk_operations' => env('WALLET_ENABLE_BULK_OPERATIONS', true),
+        'freeze_rules' => [
+            'auto_freeze_on_suspicious_activity' => env('WALLET_AUTO_FREEZE_SUSPICIOUS', true),
+            'auto_freeze_on_limit_exceeded' => env('WALLET_AUTO_FREEZE_LIMIT_EXCEEDED', false),
+        ],
+        'notification_settings' => [
+            'notify_on_balance_change' => env('WALLET_NOTIFY_BALANCE_CHANGE', true),
+            'notify_on_transaction' => env('WALLET_NOTIFY_TRANSACTION', true),
+            'notify_on_transfer' => env('WALLET_NOTIFY_TRANSFER', true),
+        ],
+        'security_settings' => [
+            'require_confirmation' => env('WALLET_REQUIRE_CONFIRMATION', false),
+            'max_failed_attempts' => env('WALLET_MAX_FAILED_ATTEMPTS', 5),
+            'lockout_duration' => env('WALLET_LOCKOUT_DURATION', 900), // 15 minutes
         ],
     ],
 

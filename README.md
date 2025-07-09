@@ -34,6 +34,18 @@ A comprehensive Laravel package for managing multi-currency wallets with advance
 - 📊 **Analytics**: Built-in performance metrics and reporting
 - 🔐 **Type Safety**: Strict type checking with value objects and validation
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[📖 Getting Started](docs/getting-started.md)** - Installation and basic setup
+- **[🚀 Advanced Features](docs/advanced-features.md)** - Bulk operations, events, and more
+- **[📋 API Reference](docs/api-reference.md)** - Complete method documentation
+- **[⚙️ Configuration](docs/configuration.md)** - Detailed configuration options
+- **[💡 Examples](docs/examples.md)** - Real-world usage examples
+- **[✅ Best Practices](docs/best-practices.md)** - Production tips and recommendations
+- **[❓ FAQ](docs/faq.md)** - Frequently asked questions
+
 ## 📋 Requirements
 
 - PHP 8.1+

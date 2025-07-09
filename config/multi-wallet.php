@@ -213,26 +213,26 @@ return [
             'bulk_operation_started' => \HWallet\LaravelMultiWallet\Events\BulkOperationStarted::class,
             'bulk_operation_completed' => \HWallet\LaravelMultiWallet\Events\BulkOperationCompleted::class,
             'bulk_operation_failed' => \HWallet\LaravelMultiWallet\Events\BulkOperationFailed::class,
-            
+
             // Exchange Rate Events
             'exchange_rate_updated' => \HWallet\LaravelMultiWallet\Events\ExchangeRateUpdated::class,
-            
+
             // Security Events
             'suspicious_activity_detected' => \HWallet\LaravelMultiWallet\Events\SuspiciousActivityDetected::class,
-            
+
             // Transaction Events
             'transaction_created' => \HWallet\LaravelMultiWallet\Events\TransactionCreated::class,
             'transaction_confirmed' => \HWallet\LaravelMultiWallet\Events\TransactionConfirmed::class,
             'transaction_failed' => \HWallet\LaravelMultiWallet\Events\TransactionFailed::class,
             'transaction_reversed' => \HWallet\LaravelMultiWallet\Events\TransactionReversed::class,
-            
+
             // Transfer Events
             'transfer_initiated' => \HWallet\LaravelMultiWallet\Events\TransferInitiated::class,
             'transfer_pending' => \HWallet\LaravelMultiWallet\Events\TransferPending::class,
             'transfer_completed' => \HWallet\LaravelMultiWallet\Events\TransferCompleted::class,
             'transfer_failed' => \HWallet\LaravelMultiWallet\Events\TransferFailed::class,
             'transfer_rejected' => \HWallet\LaravelMultiWallet\Events\TransferRejected::class,
-            
+
             // Wallet Events
             'wallet_created' => \HWallet\LaravelMultiWallet\Events\WalletCreated::class,
             'wallet_updated' => \HWallet\LaravelMultiWallet\Events\WalletUpdated::class,
@@ -243,7 +243,7 @@ return [
             'wallet_limit_exceeded' => \HWallet\LaravelMultiWallet\Events\WalletLimitExceeded::class,
             'wallet_reconciled' => \HWallet\LaravelMultiWallet\Events\WalletReconciled::class,
             'wallet_configuration_changed' => \HWallet\LaravelMultiWallet\Events\WalletConfigurationChanged::class,
-            
+
             // Wallet Operation Events
             'wallet_operation_started' => \HWallet\LaravelMultiWallet\Events\WalletOperationStarted::class,
             'wallet_operation_completed' => \HWallet\LaravelMultiWallet\Events\WalletOperationCompleted::class,

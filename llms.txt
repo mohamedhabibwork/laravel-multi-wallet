@@ -12,11 +12,14 @@ A comprehensive Laravel package for managing multi-currency wallets with advance
 
 This package has been **optimized for production** with best practices including:
 - **DB::transaction** for all bulk operations
-- **100% test coverage** with 227 passing tests 
+- **100% test coverage** with 270+ passing tests 
 - **Clean code architecture** following SOLID principles
 - **Static analysis compliant** (PHPStan level 8)
 - **Performance optimized** with efficient database queries
 - **Production-ready** with comprehensive error handling
+- **Helper functions** for common operations
+- **Debugging utilities** for monitoring and maintenance
+- **Type safety system** with value objects and validation
 
 ## Key Features
 
@@ -34,9 +37,13 @@ This package has been **optimized for production** with best practices including
 - 🎛️ **Operation Validation**: Attribute-based operation validation and logging
 - 🔄 **Enhanced Events**: Comprehensive event system for all operations
 - 📈 **Wallet Statistics**: Built-in analytics and reconciliation tools
-- 🧪 **100% Test Coverage**: Fully tested with 227 passing tests
+- 🧪 **100% Test Coverage**: Fully tested with 270+ passing tests
 - 🚀 **Production Ready**: Optimized for performance and reliability
 - 🔧 **Clean Code**: Follows PSR standards and best practices
+- 🛠️ **Helper Functions**: Rich set of global helper functions for common operations
+- 🔍 **Debugging Tools**: Comprehensive debugging and monitoring utilities
+- 📊 **Analytics**: Built-in performance metrics and reporting
+- 🔐 **Type Safety**: Strict type checking with value objects and validation
 
 ## Installation
 
@@ -105,86 +112,401 @@ class User extends Authenticatable
 }
 ```
 
-### 3. Attribute Configuration Benefits
+## Helper Functions
 
-With attribute-based configuration, you get enterprise-grade features:
+The package provides a comprehensive set of global helper functions for common wallet operations:
 
-- **Auto-create wallets**: Automatically create wallets when users are created
-- **Set default currencies**: Define preferred currencies for the model
-- **Configure limits**: Set transaction and wallet limits with validation
-- **Enable features**: Control which features are enabled per model
-- **Customize behavior**: Fine-tune wallet behavior for different user types
-- **Validate transactions**: Automatic validation based on configured limits
-- **Control uniqueness**: Enforce wallet uniqueness per currency
-- **Security settings**: Configure automatic freezing and 2FA requirements
-- **Balance type management**: Control which balance types are enabled
-- **Fee calculation**: Configure custom fee calculation strategies
-- **Exchange rates**: Set custom exchange rate providers
-- **Webhooks & notifications**: Configure automated notifications
-- **Metadata validation**: Set schema validation for wallet metadata
+### Currency and Amount Formatting
 
 ```php
-<?php
+// Format amounts with currency symbols
+echo wallet_format_amount(1234.56, 'USD'); // $1,234.56
+echo wallet_format_amount(1234.56, 'EUR'); // €1,234.56
+echo wallet_format_amount(1234.56, 'GBP'); // £1,234.56
+echo wallet_format_amount(1234.56, 'JPY'); // ¥1,235
 
-$user = new User();
-
-// Automatically create wallet based on configuration
-$wallet = $user->autoCreateWallet();
-
-// Create wallets for all allowed currencies
-$wallets = $user->createWalletsFromConfig();
-
-// Access configuration values
-$defaultCurrency = $user->getWalletConfigValue('default_currency');
-$transactionLimits = $user->getWalletTransactionLimits();
-$allowedCurrencies = $user->getAllowedCurrencies();
-
-// Check feature enablement
-if ($user->areBulkOperationsEnabled()) {
-    // Perform bulk operations
+// Check currency support
+if (wallet_is_currency_supported('USD')) {
+    echo "USD is supported";
 }
 
-if ($user->areWalletEventsEnabled()) {
-    // Events are enabled for this user
+// Validate amounts within limits
+if (wallet_validate_amount(100, 50, 200)) {
+    echo "Amount is within limits";
 }
 
-// Enhanced configuration methods
-$maxBalance = $user->getMaxBalanceLimit();
-$minTransaction = $user->getMinTransactionAmount();
-$isUnique = $user->isUniquenessEnabled();
-$balanceTypes = $user->getEnabledBalanceTypes();
-$feeSettings = $user->getFeeCalculationSettings();
-$webhookSettings = $user->getWebhookSettings();
-$securitySettings = $user->getSecuritySettings();
+// Calculate fees
+$fee = wallet_calculate_fee(1000, 2.5); // 2.5% fee = 25.0
+$fee = wallet_calculate_fee(1000, 0, 5.0); // Fixed fee = 5.0
+$fee = wallet_calculate_fee(1000, 1.5, 2.0); // Both = 17.0
 
-// Validation methods
-if ($user->validateTransactionAmount(100.00)) {
-    // Amount is within configured limits
+// Round amounts with precision
+$rounded = wallet_round_amount(123.456789, 2); // 123.46
+
+// Calculate percentages
+$result = wallet_calculate_percentage(1000, 15); // 150.0
+```
+
+### Wallet Operations
+
+```php
+// Format balance summary with currency symbols
+$formatted = wallet_format_balance_summary($wallet);
+// Returns: ['available' => '$1,000.00', 'pending' => '$0.00', 'frozen' => '$0.00', 'trial' => '$0.00', 'total' => '$1,000.00']
+
+// Get comprehensive user wallet summary
+$summary = wallet_get_user_summary($user);
+// Returns: ['wallets' => [...], 'total_balance' => 1500.0, 'currencies' => ['USD', 'EUR']]
+```
+
+### Advanced Helper Class Methods
+
+```php
+use HWallet\LaravelMultiWallet\Helpers\WalletHelpers;
+
+$helpers = app(WalletHelpers::class);
+
+// Currency validation and symbols
+$helpers->isValidCurrency('USD'); // true
+$helpers->isValidCurrency('INVALID'); // false
+$helpers->getCurrencySymbol('USD'); // $
+$helpers->getCurrencySymbol('EUR'); // €
+
+// Transaction fee calculation with strategies
+$fee = $helpers->calculateTransactionFee(1000, 'percentage', 2.5); // 25.0
+$fee = $helpers->calculateTransactionFee(1000, 'fixed', 10.0); // 10.0
+
+// Tiered fee calculation
+$fee = $helpers->calculateTransactionFee(1000, 'tiered', [
+    'tiers' => [
+        ['min' => 0, 'max' => 500, 'rate' => 1.0],
+        ['min' => 500, 'max' => 1000, 'rate' => 2.0],
+        ['min' => 1000, 'max' => null, 'rate' => 3.0]
+    ]
+]); // 30.0
+
+// Metadata validation and sanitization
+$helpers->validateMetadata(['purpose' => 'savings']); // true
+$helpers->validateMetadata(['password' => 'secret']); // false (sensitive data)
+$helpers->validateMetadata(['data' => str_repeat('x', 2000)]); // false (too large)
+
+// Balance statistics for multiple wallets
+$stats = $helpers->calculateBalanceStatistics([$wallet1, $wallet2]);
+// Returns: ['total' => 1500.0, 'average' => 750.0, 'min' => 500.0, 'max' => 1000.0, 'count' => 2]
+
+// Precision arithmetic for financial calculations
+$sum = $helpers->addAmounts(0.1, 0.2); // 0.3 (properly handled floating point)
+
+// Multi-currency formatting
+$formatted = $helpers->formatMultipleCurrencies([
+    ['amount' => 100, 'currency' => 'USD'],
+    ['amount' => 200, 'currency' => 'EUR'],
+    ['amount' => 300, 'currency' => 'GBP']
+]);
+// Returns: ['$100.00', '€200.00', '£300.00']
+```
+
+## Debugging and Monitoring Utilities
+
+The package includes comprehensive debugging and monitoring tools through the `WalletUtils` class:
+
+### Wallet Debugging
+
+```php
+use HWallet\LaravelMultiWallet\Utils\WalletUtils;
+
+// Debug wallet state with comprehensive information
+$debug = WalletUtils::debugWallet($wallet);
+// Returns:
+// [
+//     'wallet_info' => ['id' => 1, 'currency' => 'USD', 'name' => 'Main Wallet', ...],
+//     'balances' => ['available' => 1000.0, 'pending' => 0.0, ...],
+//     'recent_transactions' => [...],
+//     'metadata' => [...],
+//     'transaction_count' => 150,
+//     'transfer_count' => 25
+// ]
+
+// Validate wallet integrity
+$validation = WalletUtils::validateWalletIntegrity($wallet);
+// Returns: ['valid' => true, 'issues' => [], 'warnings' => []]
+
+// Reconcile wallet balances automatically
+$result = WalletUtils::reconcileWallet($wallet);
+// Returns: ['reconciled' => true, 'changes' => [...], 'summary' => 'Wallet reconciled successfully']
+
+// Get comprehensive audit trail
+$trail = WalletUtils::getWalletAuditTrail($wallet, 50);
+// Returns collection of transactions and transfers with metadata
+
+// Export wallet data for backup or analysis
+$export = WalletUtils::exportWalletData($wallet);
+// Returns comprehensive wallet data including transactions, transfers, and metadata
+```
+
+### Performance Monitoring
+
+```php
+// Get detailed performance metrics
+$metrics = WalletUtils::getWalletPerformanceMetrics($wallet);
+// Returns:
+// [
+//     'transaction_count' => 150,
+//     'average_transaction_amount' => 75.5,
+//     'total_volume' => 11325.0,
+//     'balance_velocity' => 0.088
+// ]
+
+// Get comprehensive wallet statistics
+$stats = WalletUtils::getWalletStats($wallet);
+// Returns:
+// [
+//     'total_transactions' => 100,
+//     'total_credits' => 60,
+//     'total_debits' => 40,
+//     'credit_volume' => 6000.0,
+//     'debit_volume' => 4000.0,
+//     'net_flow' => 2000.0
+// ]
+
+// Analyze transaction patterns over time
+$patterns = WalletUtils::analyzeTransactionPatterns($wallet, 30);
+// Returns:
+// [
+//     'transaction_frequency' => 2.5,
+//     'amount_patterns' => ['avg' => 75.0, 'min' => 10.0, 'max' => 500.0],
+//     'time_patterns' => [...],
+//     'type_distribution' => ['credits' => 60, 'debits' => 40]
+// ]
+
+// Detect anomalies and suspicious activities
+$anomalies = WalletUtils::detectAnomalies($wallet);
+// Returns:
+// [
+//     'detected' => true,
+//     'anomalies' => [
+//         ['transaction_id' => 123, 'amount' => 5000.0, 'type' => 'unusual_amount']
+//     ],
+//     'score' => 20
+// ]
+```
+
+### Health Monitoring
+
+```php
+// Check wallet health with scoring system
+$health = WalletUtils::checkWalletHealth($wallet);
+// Returns:
+// [
+//     'healthy' => true,
+//     'score' => 85,
+//     'issues' => [],
+//     'recommendations' => []
+// ]
+
+// Monitor wallet activity levels
+$monitoring = WalletUtils::monitorWalletActivity($wallet);
+// Returns:
+// [
+//     'activity_level' => 'medium',
+//     'risk_score' => 25,
+//     'recent_transaction_count' => 15,
+//     'monitoring_status' => 'active'
+// ]
+
+// Generate alerts for suspicious activities
+$alerts = WalletUtils::generateAlerts($wallet);
+// Returns:
+// [
+//     'alerts' => [
+//         ['type' => 'high_frequency', 'message' => 'High transaction frequency detected', 'severity' => 'medium']
+//     ],
+//     'severity' => 'medium',
+//     'recommendations' => ['Review recent transactions']
+// ]
+```
+
+### Bulk Operations and Maintenance
+
+```php
+// Perform bulk operations on multiple wallets
+$result = WalletUtils::bulkOperation([$wallet1, $wallet2, $wallet3], 'credit', ['amount' => 100]);
+// Returns:
+// [
+//     'successful' => 3,
+//     'failed' => 0,
+//     'total' => 3,
+//     'errors' => []
+// ]
+
+// Clean up old data with configurable retention
+$cleanup = WalletUtils::cleanupOldData($wallet, ['days' => 90]);
+// Returns:
+// [
+//     'cleaned' => true,
+//     'removed_count' => 150,
+//     'size_freed' => 153600
+// ]
+
+// Optimize wallet performance
+$optimization = WalletUtils::optimizeWallet($wallet);
+// Returns:
+// [
+//     'optimized' => true,
+//     'improvements' => ['Index optimization', 'Query caching'],
+//     'performance_gain' => '15%'
+// ]
+
+// Validate data integrity across operations
+$integrity = WalletUtils::validateDataIntegrity($wallet);
+// Returns:
+// [
+//     'valid' => true,
+//     'checksums' => ['transactions' => 'abc123...'],
+//     'consistency' => 'good'
+// ]
+```
+
+## Type Safety System
+
+The package includes a comprehensive type safety system with value objects and strict validation:
+
+### Type Creation and Validation
+
+```php
+use HWallet\LaravelMultiWallet\Types\WalletTypes;
+
+// Create type-safe amounts with validation
+$amount = WalletTypes::createAmount(100.50);
+echo $amount->getValue(); // 100.50
+echo $amount->isPositive(); // true
+echo $amount->isZero(); // false
+
+// Amount arithmetic operations
+$sum = $amount->add(WalletTypes::createAmount(50.00)); // 150.50
+$difference = $amount->subtract(WalletTypes::createAmount(25.00)); // 75.50
+$product = $amount->multiply(2); // 201.00
+$quotient = $amount->divide(2); // 50.25
+
+// Currency validation with format checking
+$currency = WalletTypes::createCurrency('USD');
+echo $currency->getCode(); // USD
+echo $currency->__toString(); // USD
+
+// ID validation with type safety
+$walletId = WalletTypes::createWalletId(123);
+$transactionId = WalletTypes::createTransactionId(456);
+$transferId = WalletTypes::createTransferId(789);
+
+// Metadata with automatic sanitization
+$metadata = WalletTypes::createWalletMetadata([
+    'purpose' => 'savings',
+    'category' => 'personal',
+    'password' => 'secret123' // This will be sanitized out
+]);
+echo $metadata->get('purpose'); // 'savings'
+echo $metadata->has('password'); // false (sanitized)
+
+// Balance summaries with validation
+$summary = WalletTypes::createBalanceSummary([
+    'available' => 1000.00,
+    'pending' => 50.00,
+    'frozen' => 0.00,
+    'trial' => 25.00,
+    'total' => 1075.00
+]);
+
+// Configuration objects with validation
+$config = WalletTypes::createWalletConfiguration([
+    'default_currency' => 'USD',
+    'allowed_currencies' => ['USD', 'EUR', 'GBP'],
+    'transaction_limits' => ['min_amount' => 0.01, 'max_amount' => 10000.00]
+]);
+```
+
+### Type Comparisons and Operations
+
+```php
+// Amount comparisons
+$amount1 = WalletTypes::createAmount(100.00);
+$amount2 = WalletTypes::createAmount(50.00);
+
+$amount1->greaterThan($amount2); // true
+$amount2->lessThan($amount1); // true
+$amount1->equals(WalletTypes::createAmount(100.00)); // true
+$amount1->greaterThanOrEqual($amount2); // true
+$amount2->lessThanOrEqual($amount1); // true
+
+// Currency comparisons
+$usd1 = WalletTypes::createCurrency('USD');
+$usd2 = WalletTypes::createCurrency('USD');
+$eur = WalletTypes::createCurrency('EUR');
+
+$usd1->equals($usd2); // true
+$usd1->equals($eur); // false
+
+// ID comparisons
+$id1 = WalletTypes::createWalletId(123);
+$id2 = WalletTypes::createWalletId(123);
+$id3 = WalletTypes::createWalletId(456);
+
+$id1->equals($id2); // true
+$id1->equals($id3); // false
+
+// Type validation and error handling
+try {
+    WalletTypes::createAmount(-100); // Throws InvalidArgumentException
+} catch (InvalidArgumentException $e) {
+    echo $e->getMessage(); // "Amount must be positive"
 }
 
-if ($user->validateWalletBalance(5000.00)) {
-    // Balance is within configured limits
+try {
+    WalletTypes::createCurrency('INVALID'); // Throws InvalidArgumentException
+} catch (InvalidArgumentException $e) {
+    echo $e->getMessage(); // "Invalid currency code format"
 }
+```
 
-// Create wallet with validation
-$wallet = $user->createWalletWithValidation('USD', 'Validated Wallet');
+## Reporting and Analytics
 
-// Check balance type availability
-if ($user->isBalanceTypeEnabled('frozen')) {
-    // Frozen balance type is enabled
-}
+Generate comprehensive reports for analysis and auditing:
 
-// Get default wallet based on configuration
-$defaultWallet = $user->getDefaultWalletFromConfig();
+```php
+// Generate summary report for user
+$report = WalletUtils::generateSummaryReport($user);
+// Returns:
+// [
+//     'user_info' => ['id' => 1, 'name' => 'John Doe', ...],
+//     'wallet_summary' => ['total_wallets' => 3, 'currencies' => ['USD', 'EUR']],
+//     'balance_summary' => ['total_balance' => 5000.0, 'available' => 4500.0, ...]
+// ]
 
-// Sync with global configuration
-$user->syncWithGlobalConfiguration();
+// Generate detailed report with transactions
+$report = WalletUtils::generateDetailedReport($user, [
+    'include_transactions' => true,
+    'include_transfers' => true,
+    'date_range' => ['start' => '2024-01-01', 'end' => '2024-12-31']
+]);
+// Returns comprehensive report with all transactions and transfers
 
-// Advanced configuration access
-$config = $user->getWalletConfigurationInterface();
-$exchangeProvider = $config->getExchangeRateProvider();
-$metadataSchema = $user->getMetadataSchema();
-$freezeRules = $user->getFreezeRules();
+// Generate audit report for compliance
+$report = WalletUtils::generateAuditReport($user, ['days' => 30]);
+// Returns:
+// [
+//     'period' => ['start' => '2024-11-20', 'end' => '2024-12-20'],
+//     'user_info' => [...],
+//     'audit_trail' => [...],
+//     'summary' => [...]
+// ]
+
+// Generate performance report with metrics
+$report = WalletUtils::generatePerformanceReport($user);
+// Returns:
+// [
+//     'user_info' => [...],
+//     'performance_metrics' => [...],
+//     'recommendations' => [...]
+// ]
 ```
 
 ## Core Concepts
@@ -1021,7 +1343,7 @@ This package is **production-ready** with enterprise-grade quality assurance:
 - **Documentation**: Comprehensive PHPDoc blocks and examples
 
 ### 🧪 Testing Excellence
-- **100% Test Coverage**: 227 passing tests with 654 assertions
+- **100% Test Coverage**: 270+ passing tests with 654 assertions
 - **Comprehensive Test Suite**: Unit, Feature, and Integration tests
 - **Database Testing**: Support for MySQL, PostgreSQL, SQLite, SQL Server
 - **Performance Testing**: Bulk operations and high-load scenarios

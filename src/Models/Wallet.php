@@ -72,6 +72,51 @@ class Wallet extends Model implements WalletInterface
         'balance_trial' => 'decimal:8',
     ];
 
+    protected $with = ['holder']; // Eager load holder by default
+
+    /**
+     * Query scopes for optimization
+     */
+    public function scopeByHolder($query, Model $holder)
+    {
+        return $query->where('holder_type', get_class($holder))
+                    ->where('holder_id', $holder->getKey());
+    }
+
+    public function scopeByCurrency($query, string $currency)
+    {
+        return $query->where('currency', $currency);
+    }
+
+    public function scopeWithBalance($query, float $minBalance = 0)
+    {
+        return $query->whereRaw('(balance_pending + balance_available + balance_frozen + balance_trial) >= ?', [$minBalance]);
+    }
+
+    public function scopeWithAvailableBalance($query, float $minBalance = 0)
+    {
+        return $query->where('balance_available', '>=', $minBalance);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
+
+    public function scopeWithTransactions($query)
+    {
+        return $query->with(['transactions' => function ($q) {
+            $q->orderBy('created_at', 'desc')->limit(10);
+        }]);
+    }
+
+    public function scopeWithRecentActivity($query, int $days = 30)
+    {
+        return $query->whereHas('transactions', function ($q) use ($days) {
+            $q->where('created_at', '>=', now()->subDays($days));
+        });
+    }
+
     protected static function boot()
     {
         parent::boot();

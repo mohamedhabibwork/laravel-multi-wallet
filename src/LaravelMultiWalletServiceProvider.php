@@ -44,8 +44,33 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
         Transfer::observe(TransferObserver::class);
     }
 
+
+
     public function packageRegistered(): void
     {
+        $this->mergeConfigFrom(__DIR__ . '/../config/multi-wallet.php', 'multi-wallet');
+
+        // Register contracts
+        $this->app->bind(\HWallet\LaravelMultiWallet\Contracts\WalletInterface::class, Wallet::class);
+        $this->app->bind(WalletConfigurationInterface::class, WalletConfiguration::class);
+        $this->app->bind(ExchangeRateProviderInterface::class, DefaultExchangeRateProvider::class);
+        $this->app->bind(\HWallet\LaravelMultiWallet\Contracts\BulkWalletOperationInterface::class, \HWallet\LaravelMultiWallet\Services\BulkWalletManager::class);
+        $this->app->bind(WalletRepositoryInterface::class, EloquentWalletRepository::class);
+        $this->app->bind(\HWallet\LaravelMultiWallet\Services\FeeCalculators\FeeCalculatorInterface::class, \HWallet\LaravelMultiWallet\Services\FeeCalculators\DefaultFeeCalculator::class);
+        $this->app->bind(\HWallet\LaravelMultiWallet\Services\Strategies\UniquenessStrategyInterface::class, \HWallet\LaravelMultiWallet\Services\Strategies\DefaultUniquenessStrategy::class);
+        $this->app->bind(\HWallet\LaravelMultiWallet\Contracts\ValidatorInterface::class, \HWallet\LaravelMultiWallet\Services\Validators\WalletValidator::class);
+
+        // Register services
+        $this->app->singleton(WalletManager::class);
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Services\BulkWalletManager::class);
+        $this->app->singleton(WalletFactory::class);
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Services\WalletIntegrationService::class);
+
+        // Register helpers and utilities
+        $this->registerHelpers();
+        $this->registerUtilities();
+        $this->registerTypes();
+
         // Register the configuration interface and implementation
         $this->app->singleton(WalletConfigurationInterface::class, function ($app) {
             $config = $app['config']->get('multi-wallet', []);
@@ -100,5 +125,46 @@ class LaravelMultiWalletServiceProvider extends PackageServiceProvider
         $this->app->alias(ExchangeRateProviderInterface::class, 'exchange-rate-provider');
         $this->app->alias(WalletRepositoryInterface::class, 'wallet-repository');
         $this->app->alias(WalletFactory::class, 'wallet-factory');
+    }
+
+    /**
+     * Register helper functions
+     */
+    protected function registerHelpers(): void
+    {
+        // Register helper service as singleton
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Helpers\WalletHelpers::class);
+        
+        // Load global helper functions file
+        $this->loadHelperFunctions();
+    }
+
+    /**
+     * Load global helper functions
+     */
+    protected function loadHelperFunctions(): void
+    {
+        $helperFile = __DIR__ . '/helpers.php';
+        if (file_exists($helperFile)) {
+            require_once $helperFile;
+        }
+    }
+
+    /**
+     * Register utility services
+     */
+    protected function registerUtilities(): void
+    {
+        // Register utility classes as singletons
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Utils\WalletUtils::class);
+    }
+
+    /**
+     * Register type services
+     */
+    protected function registerTypes(): void
+    {
+        // Register type factory as singleton
+        $this->app->singleton(\HWallet\LaravelMultiWallet\Types\WalletTypes::class);
     }
 }

@@ -4,15 +4,12 @@ namespace HWallet\LaravelMultiWallet\Utils;
 
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
 use HWallet\LaravelMultiWallet\Enums\TransactionType;
-use HWallet\LaravelMultiWallet\Models\Wallet;
 use HWallet\LaravelMultiWallet\Models\Transaction;
-use HWallet\LaravelMultiWallet\Models\Transfer;
+use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * Utility class for wallet operations and debugging
@@ -70,7 +67,7 @@ class WalletUtils
     public static function validateWalletIntegrity(Wallet $wallet): array
     {
         $issues = [];
-        
+
         // Check for negative balances
         foreach (BalanceType::cases() as $balanceType) {
             $balance = $wallet->getBalance($balanceType);
@@ -91,7 +88,7 @@ class WalletUtils
         foreach ($transactions as $transaction) {
             $amount = $transaction->amount;
             $balanceType = $transaction->balance_type;
-            
+
             if ($transaction->type === TransactionType::CREDIT) {
                 $calculatedBalances[$balanceType->value] += $amount;
             } else {
@@ -121,7 +118,7 @@ class WalletUtils
     public static function reconcileWallet(Wallet $wallet): array
     {
         $result = self::validateWalletIntegrity($wallet);
-        
+
         if ($result['valid']) {
             return [
                 'reconciled' => true,
@@ -145,7 +142,7 @@ class WalletUtils
                 foreach ($transactions as $transaction) {
                     $amount = $transaction->amount;
                     $balanceType = $transaction->balance_type;
-                    
+
                     if ($transaction->type === TransactionType::CREDIT) {
                         $calculatedBalances[$balanceType->value] += $amount;
                     } else {
@@ -183,7 +180,7 @@ class WalletUtils
             return [
                 'reconciled' => false,
                 'changes' => [],
-                'summary' => 'Wallet reconciliation failed: ' . $e->getMessage(),
+                'summary' => 'Wallet reconciliation failed: '.$e->getMessage(),
                 'wallet_id' => $wallet->id,
             ];
         }
@@ -224,7 +221,7 @@ class WalletUtils
                 'meta' => $transaction->meta,
                 'timestamp' => $transaction->created_at->timestamp,
             ];
-            
+
             if ($minDate === null || $transaction->created_at < $minDate) {
                 $minDate = $transaction->created_at;
             }
@@ -251,7 +248,7 @@ class WalletUtils
                 ],
                 'timestamp' => $transfer->created_at->timestamp,
             ];
-            
+
             if ($minDate === null || $transfer->created_at < $minDate) {
                 $minDate = $transfer->created_at;
             }
@@ -278,7 +275,7 @@ class WalletUtils
                 ],
                 'timestamp' => $transfer->created_at->timestamp,
             ];
-            
+
             if ($minDate === null || $transfer->created_at < $minDate) {
                 $minDate = $transfer->created_at;
             }
@@ -288,17 +285,17 @@ class WalletUtils
         }
 
         // Sort by timestamp descending and limit
-        usort($auditTrail, function($a, $b) {
+        usort($auditTrail, function ($a, $b) {
             return $b['timestamp'] <=> $a['timestamp'];
         });
-        
+
         $sortedTrail = array_slice($auditTrail, 0, $limit);
-        
+
         // Remove timestamp helper field
         foreach ($sortedTrail as &$item) {
             unset($item['timestamp']);
         }
-        
+
         return [
             'transactions' => $sortedTrail,
             'summary' => [
@@ -307,7 +304,7 @@ class WalletUtils
                 'total_activities' => count($sortedTrail),
                 'period_start' => $minDate,
                 'period_end' => $maxDate,
-            ]
+            ],
         ];
     }
 
@@ -414,6 +411,7 @@ class WalletUtils
                         $transaction->created_at
                     );
                 }
+
                 return $csv;
             default:
                 return $data;
@@ -426,7 +424,7 @@ class WalletUtils
     public static function calculateWalletMetrics(Wallet $wallet, int $days = 30): array
     {
         $startDate = now()->subDays($days);
-        
+
         // Use cursor for memory-efficient processing
         $transactionsCursor = $wallet->transactions()
             ->where('created_at', '>=', $startDate)
@@ -441,39 +439,39 @@ class WalletUtils
         $totalAmount = 0;
         $largestTransaction = 0;
         $smallestTransaction = PHP_FLOAT_MAX;
-        
+
         // Process transactions
         foreach ($transactionsCursor as $transaction) {
             $transactionCount++;
             $amount = $transaction->amount;
             $totalAmount += $amount;
-            
+
             if ($transaction->type === TransactionType::CREDIT) {
                 $totalCredits += $amount;
             } else {
                 $totalDebits += $amount;
             }
-            
+
             $largestTransaction = max($largestTransaction, $amount);
             $smallestTransaction = min($smallestTransaction, $amount);
         }
-        
+
         $netChange = $totalCredits - $totalDebits;
         $averageTransactionSize = $transactionCount > 0 ? $totalAmount / $transactionCount : 0;
         $smallestTransaction = $smallestTransaction === PHP_FLOAT_MAX ? 0 : $smallestTransaction;
-        
+
         // Count transfers
         $incomingTransferCount = 0;
         $outgoingTransferCount = 0;
-        
+
         foreach ($incomingTransfersCursor as $transfer) {
             $incomingTransferCount++;
         }
-        
+
         foreach ($outgoingTransfersCursor as $transfer) {
             $outgoingTransferCount++;
         }
-        
+
         $totalTransfers = $incomingTransferCount + $outgoingTransferCount;
 
         return [
@@ -489,8 +487,8 @@ class WalletUtils
             'transaction_frequency' => $transactionCount / $days,
             'transfer_frequency' => $totalTransfers / $days,
             'current_balance' => $wallet->getTotalBalance(),
-            'balance_change_percentage' => $wallet->getTotalBalance() > 0 
-                ? (($netChange / $wallet->getTotalBalance()) * 100) 
+            'balance_change_percentage' => $wallet->getTotalBalance() > 0
+                ? (($netChange / $wallet->getTotalBalance()) * 100)
                 : 0,
         ];
     }
@@ -505,21 +503,21 @@ class WalletUtils
         // Required fields
         $requiredFields = ['amount', 'type', 'balance_type'];
         foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
+            if (! isset($data[$field])) {
                 $errors[] = "Missing required field: {$field}";
             }
         }
 
         // Validate amount
         if (isset($data['amount'])) {
-            if (!is_numeric($data['amount']) || $data['amount'] <= 0) {
+            if (! is_numeric($data['amount']) || $data['amount'] <= 0) {
                 $errors[] = 'Amount must be a positive number';
             }
         }
 
         // Validate transaction type
         if (isset($data['type'])) {
-            if (!in_array($data['type'], ['credit', 'debit'])) {
+            if (! in_array($data['type'], ['credit', 'debit'])) {
                 $errors[] = 'Invalid transaction type';
             }
         }
@@ -527,7 +525,7 @@ class WalletUtils
         // Validate balance type
         if (isset($data['balance_type'])) {
             $validBalanceTypes = ['available', 'pending', 'frozen', 'trial'];
-            if (!in_array($data['balance_type'], $validBalanceTypes)) {
+            if (! in_array($data['balance_type'], $validBalanceTypes)) {
                 $errors[] = 'Invalid balance type';
             }
         }
@@ -545,7 +543,7 @@ class WalletUtils
     {
         // Remove sensitive fields
         $sensitiveFields = ['password', 'token', 'secret', 'key', 'api_key'];
-        
+
         foreach ($sensitiveFields as $field) {
             unset($data[$field]);
         }
@@ -579,7 +577,7 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();
-        
+
         $walletCount = 0;
         $totalBalance = 0;
         $availableBalance = 0;
@@ -588,29 +586,29 @@ class WalletUtils
         $currencies = [];
         $lastTransactionDate = null;
         $recentTransactionCount = 0;
-        
+
         foreach ($walletsCursor as $wallet) {
             $walletCount++;
             $totalBalance += $wallet->getTotalBalance();
             $availableBalance += $wallet->getBalance(BalanceType::AVAILABLE);
             $pendingBalance += $wallet->getBalance(BalanceType::PENDING);
             $frozenBalance += $wallet->getBalance(BalanceType::FROZEN);
-            
-            if (!in_array($wallet->currency, $currencies)) {
+
+            if (! in_array($wallet->currency, $currencies)) {
                 $currencies[] = $wallet->currency;
             }
-            
+
             // Get last transaction date and count recent transactions
             $lastTransaction = $wallet->transactions()->latest()->first();
             if ($lastTransaction && ($lastTransactionDate === null || $lastTransaction->created_at > $lastTransactionDate)) {
                 $lastTransactionDate = $lastTransaction->created_at;
             }
-            
+
             $recentTransactionCount += $wallet->transactions()
                 ->where('created_at', '>=', now()->subDays(30))
                 ->count();
         }
-        
+
         return [
             'user_info' => [
                 'id' => $user->id,
@@ -642,14 +640,14 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();
-        
+
         $wallets = [];
         $allTransactions = [];
         $allTransfers = [];
         $totalTransactions = 0;
         $totalTransfers = 0;
         $totalVolume = 0;
-        
+
         foreach ($walletsCursor as $wallet) {
             $wallets[] = [
                 'id' => $wallet->id,
@@ -657,7 +655,7 @@ class WalletUtils
                 'name' => $wallet->name,
                 'balance' => $wallet->getTotalBalance(),
             ];
-            
+
             // Process transactions if requested
             if ($options['include_transactions'] ?? false) {
                 $transactionsCursor = $wallet->transactions()->latest()->take(50)->cursor();
@@ -673,12 +671,12 @@ class WalletUtils
                     $totalVolume += $transaction->amount;
                 }
             }
-            
+
             // Process transfers if requested
             if ($options['include_transfers'] ?? false) {
                 $incomingTransfersCursor = $wallet->incomingTransfers()->latest()->take(25)->cursor();
                 $outgoingTransfersCursor = $wallet->outgoingTransfers()->latest()->take(25)->cursor();
-                
+
                 foreach ($incomingTransfersCursor as $transfer) {
                     $allTransfers[] = [
                         'id' => $transfer->id,
@@ -688,7 +686,7 @@ class WalletUtils
                         'timestamp' => $transfer->created_at->timestamp,
                     ];
                 }
-                
+
                 foreach ($outgoingTransfersCursor as $transfer) {
                     $allTransfers[] = [
                         'id' => $transfer->id,
@@ -699,15 +697,15 @@ class WalletUtils
                     ];
                 }
             }
-            
+
             // Count all transactions and transfers for analytics
             $totalTransactions += $wallet->transactions()->count();
             $totalTransfers += $wallet->incomingTransfers()->count() + $wallet->outgoingTransfers()->count();
         }
-        
+
         // Sort transactions by timestamp if included
         if ($options['include_transactions'] ?? false) {
-            usort($allTransactions, function($a, $b) {
+            usort($allTransactions, function ($a, $b) {
                 return $b['timestamp'] <=> $a['timestamp'];
             });
             $allTransactions = array_slice($allTransactions, 0, 50);
@@ -716,10 +714,10 @@ class WalletUtils
                 unset($transaction['timestamp']);
             }
         }
-        
+
         // Sort transfers by timestamp if included
         if ($options['include_transfers'] ?? false) {
-            usort($allTransfers, function($a, $b) {
+            usort($allTransfers, function ($a, $b) {
                 return $b['timestamp'] <=> $a['timestamp'];
             });
             $allTransfers = array_slice($allTransfers, 0, 50);
@@ -728,7 +726,7 @@ class WalletUtils
                 unset($transfer['timestamp']);
             }
         }
-        
+
         return [
             'user_info' => [
                 'id' => $user->id,
@@ -754,31 +752,31 @@ class WalletUtils
     {
         $days = $options['days'] ?? 30;
         $startDate = now()->subDays($days);
-        
+
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();
-        
+
         $auditTrail = [];
         $totalTransactions = 0;
         $totalVolume = 0;
         $creditsCount = 0;
         $debitsCount = 0;
-        
+
         foreach ($walletsCursor as $wallet) {
             $transactionsCursor = $wallet->transactions()
                 ->where('created_at', '>=', $startDate)
                 ->cursor();
-            
+
             foreach ($transactionsCursor as $transaction) {
                 $totalTransactions++;
                 $totalVolume += $transaction->amount;
-                
+
                 if ($transaction->type === TransactionType::CREDIT) {
                     $creditsCount++;
                 } else {
                     $debitsCount++;
                 }
-                
+
                 $auditTrail[] = [
                     'id' => $transaction->id,
                     'wallet_id' => $transaction->wallet_id,
@@ -788,7 +786,7 @@ class WalletUtils
                 ];
             }
         }
-        
+
         return [
             'period' => [
                 'days' => $days,
@@ -822,30 +820,30 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();
-        
+
         $totalVolume = 0;
         $totalTransactions = 0;
         $totalBalance = 0;
         $walletCount = 0;
         $walletHealth = [];
-        
+
         foreach ($walletsCursor as $wallet) {
             $walletCount++;
             $totalBalance += $wallet->getTotalBalance();
-            
+
             // Calculate volume and transaction count for this wallet
             $transactionsCursor = $wallet->transactions()->cursor();
             $walletTransactionCount = 0;
             $walletVolume = 0;
-            
+
             foreach ($transactionsCursor as $transaction) {
                 $walletTransactionCount++;
                 $walletVolume += $transaction->amount;
             }
-            
+
             $totalTransactions += $walletTransactionCount;
             $totalVolume += $walletVolume;
-            
+
             // Get wallet health
             $healthData = self::checkWalletHealth($wallet);
             $walletHealth[] = [
@@ -855,9 +853,9 @@ class WalletUtils
                 'status' => $healthData['healthy'] ? 'healthy' : 'needs_attention',
             ];
         }
-        
+
         $averageBalance = $walletCount > 0 ? $totalBalance / $walletCount : 0;
-        
+
         return [
             'user_info' => [
                 'id' => $user->id,
@@ -892,7 +890,7 @@ class WalletUtils
         $totalBalance = $wallet->getTotalBalance();
         $availableBalance = $wallet->getBalance(BalanceType::AVAILABLE);
         $frozenBalance = $wallet->getBalance(BalanceType::FROZEN);
-        
+
         if ($totalBalance <= 0) {
             $score -= 30;
             $issues[] = 'Zero or negative balance';
@@ -945,19 +943,19 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $transactionsCursor = $wallet->transactions()->cursor();
-        
+
         $transactionCount = 0;
         $totalVolume = 0;
         $totalAmount = 0;
-        
+
         foreach ($transactionsCursor as $transaction) {
             $transactionCount++;
             $totalVolume += $transaction->amount;
             $totalAmount += $transaction->amount;
         }
-        
+
         $avgAmount = $transactionCount > 0 ? $totalAmount / $transactionCount : 0;
-        
+
         // Calculate activity score based on recent transactions using count query
         $recentTransactions = $wallet->transactions()->where('created_at', '>=', now()->subDays(30))->count();
         $activityScore = min(100, $recentTransactions * 5);
@@ -978,29 +976,29 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $transactionsCursor = $wallet->transactions()->cursor();
-        
+
         $transactionCount = 0;
         $totalCredits = 0;
         $totalDebits = 0;
         $totalAmount = 0;
         $largestTransaction = 0;
         $smallestTransaction = PHP_FLOAT_MAX;
-        
+
         foreach ($transactionsCursor as $transaction) {
             $transactionCount++;
             $amount = $transaction->amount;
             $totalAmount += $amount;
-            
+
             if ($transaction->type === TransactionType::CREDIT) {
                 $totalCredits += $amount;
             } else {
                 $totalDebits += $amount;
             }
-            
+
             $largestTransaction = max($largestTransaction, $amount);
             $smallestTransaction = min($smallestTransaction, $amount);
         }
-        
+
         $avgAmount = $transactionCount > 0 ? $totalAmount / $transactionCount : 0;
         $smallestTransaction = $smallestTransaction === PHP_FLOAT_MAX ? 0 : $smallestTransaction;
         $netFlow = $totalCredits - $totalDebits;
@@ -1047,20 +1045,20 @@ class WalletUtils
             $transactionCount++;
             $amount = $transaction->amount;
             $totalAmount += $amount;
-            
+
             $minAmount = min($minAmount, $amount);
             $maxAmount = max($maxAmount, $amount);
-            
+
             if ($transaction->type === TransactionType::CREDIT) {
                 $creditCount++;
             } else {
                 $debitCount++;
             }
-            
+
             // Track hourly activity
             $hour = $transaction->created_at->hour;
             $hourlyActivity[$hour]++;
-            
+
             // Track weekend vs weekday activity
             if ($transaction->created_at->isWeekend()) {
                 $weekendCount++;
@@ -1068,14 +1066,14 @@ class WalletUtils
                 $weekdayCount++;
             }
         }
-        
+
         $avgAmount = $transactionCount > 0 ? $totalAmount / $transactionCount : 0;
         $minAmount = $minAmount === PHP_FLOAT_MAX ? 0 : $minAmount;
-        
+
         // Find most and least active hours
         $mostActiveHour = array_keys($hourlyActivity, max($hourlyActivity))[0] ?? 12;
         $leastActiveHour = array_keys($hourlyActivity, min($hourlyActivity))[0] ?? 3;
-        
+
         // Calculate weekend activity ratio
         $weekendActivity = $transactionCount > 0 ? $weekendCount / $transactionCount : 0;
 
@@ -1117,12 +1115,12 @@ class WalletUtils
     {
         // Use cursor for memory-efficient processing
         $transactionsCursor = $wallet->transactions()->latest()->take(100)->cursor();
-        
+
         $transactionCount = 0;
         $totalAmount = 0;
         $amounts = [];
         $anomalies = [];
-        
+
         // First pass: collect amounts for average calculation
         foreach ($transactionsCursor as $transaction) {
             $transactionCount++;
@@ -1130,12 +1128,12 @@ class WalletUtils
             $totalAmount += $amount;
             $amounts[] = ['id' => $transaction->id, 'amount' => $amount, 'created_at' => $transaction->created_at];
         }
-        
+
         $avgAmount = $transactionCount > 0 ? $totalAmount / $transactionCount : 0;
-        
+
         // Use a lower threshold - 3x the average amount, but with a minimum of 500
         $threshold = max($avgAmount * 3, 500);
-        
+
         // Second pass: detect anomalies
         foreach ($amounts as $transactionData) {
             if ($transactionData['amount'] > $threshold) {
@@ -1148,13 +1146,13 @@ class WalletUtils
                 ];
             }
         }
-        
+
         // Additional anomaly detection patterns
         $frequencyAnomalies = self::detectFrequencyAnomalies($amounts);
         $anomalies = array_merge($anomalies, $frequencyAnomalies);
 
         return [
-            'detected' => !empty($anomalies),
+            'detected' => ! empty($anomalies),
             'anomalies' => $anomalies,
             'score' => count($anomalies) * 10,
             'analysis' => [
@@ -1164,17 +1162,17 @@ class WalletUtils
             ],
         ];
     }
-    
+
     /**
      * Detect frequency-based anomalies
      */
     private static function detectFrequencyAnomalies(array $amounts): array
     {
         $anomalies = [];
-        $recentTransactions = array_filter($amounts, function($transaction) {
+        $recentTransactions = array_filter($amounts, function ($transaction) {
             return $transaction['created_at'] >= now()->subHours(1);
         });
-        
+
         if (count($recentTransactions) > 10) {
             $anomalies[] = [
                 'type' => 'high_frequency',
@@ -1184,7 +1182,7 @@ class WalletUtils
                 'description' => 'High transaction frequency detected in the last hour',
             ];
         }
-        
+
         return $anomalies;
     }
 
@@ -1214,7 +1212,7 @@ class WalletUtils
                 }
             } catch (\Exception $e) {
                 $failed++;
-                $errors[] = "Wallet {$wallet->id}: " . $e->getMessage();
+                $errors[] = "Wallet {$wallet->id}: ".$e->getMessage();
             }
         }
 
@@ -1251,7 +1249,7 @@ class WalletUtils
     {
         $alerts = [];
         $recentTransactions = $wallet->transactions()->where('created_at', '>=', now()->subHours(1))->count();
-        
+
         if ($recentTransactions > 10) {
             $alerts[] = [
                 'type' => 'high_frequency',
@@ -1274,7 +1272,7 @@ class WalletUtils
     {
         $days = $options['days'] ?? 90;
         $cutoff = now()->subDays($days);
-        
+
         $removedCount = $wallet->transactions()
             ->where('created_at', '<', $cutoff)
             ->where('confirmed', true)
@@ -1305,21 +1303,21 @@ class WalletUtils
     public static function validateDataIntegrity(Wallet $wallet): array
     {
         $integrity = self::validateWalletIntegrity($wallet);
-        
+
         // Use cursor for memory-efficient checksum calculation
         $transactionsCursor = $wallet->transactions()->cursor();
         $transactionIds = [];
-        
+
         foreach ($transactionsCursor as $transaction) {
             $transactionIds[] = $transaction->id;
         }
-        
+
         $checksum = md5(implode(',', $transactionIds));
-        
+
         return [
             'valid' => $integrity['valid'],
             'checksums' => ['transactions' => $checksum],
             'consistency' => $integrity['valid'] ? 'good' : 'issues_found',
         ];
     }
-} 
+}

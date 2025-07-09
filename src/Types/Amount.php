@@ -17,7 +17,7 @@ class Amount
             throw new InvalidArgumentException('Amount cannot be negative');
         }
 
-        if (!is_finite($amount)) {
+        if (! is_finite($amount)) {
             throw new InvalidArgumentException('Amount must be a finite number');
         }
 
@@ -40,6 +40,7 @@ class Amount
         if ($result < 0) {
             throw new InvalidArgumentException('Result cannot be negative');
         }
+
         return new Amount($result);
     }
 
@@ -53,6 +54,7 @@ class Amount
         if ($divisor == 0) {
             throw new InvalidArgumentException('Cannot divide by zero');
         }
+
         return new Amount($this->value / $divisor);
     }
 

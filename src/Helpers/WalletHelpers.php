@@ -4,12 +4,11 @@ namespace HWallet\LaravelMultiWallet\Helpers;
 
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
 use HWallet\LaravelMultiWallet\Enums\TransactionType;
-use HWallet\LaravelMultiWallet\Models\Wallet;
 use HWallet\LaravelMultiWallet\Models\Transaction;
 use HWallet\LaravelMultiWallet\Models\Transfer;
+use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
@@ -23,20 +22,20 @@ class WalletHelpers
     public static function formatAmountStatic(float $amount, string $currency = 'USD', int $decimals = 2): string
     {
         // Validate currency first
-        if (!self::isValidCurrency($currency)) {
+        if (! self::isValidCurrency($currency)) {
             throw new InvalidArgumentException("Invalid currency code: {$currency}");
         }
-        
-        if (!self::isCurrencySupported($currency)) {
+
+        if (! self::isCurrencySupported($currency)) {
             throw new InvalidArgumentException("Unsupported currency: {$currency}");
         }
-        
+
         $formatted = number_format($amount, $decimals, '.', ',');
         $symbol = self::getCurrencySymbol($currency);
-        
+
         return match (strtoupper($currency)) {
-            'JPY', 'KRW', 'VND' => $symbol . number_format($amount, 0, '.', ','), // No decimal places for some currencies
-            default => $symbol . $formatted,
+            'JPY', 'KRW', 'VND' => $symbol.number_format($amount, 0, '.', ','), // No decimal places for some currencies
+            default => $symbol.$formatted,
         };
     }
 
@@ -53,10 +52,10 @@ class WalletHelpers
      */
     public static function getCurrencySymbol(string $currency): string
     {
-        if (!self::isValidCurrency($currency)) {
+        if (! self::isValidCurrency($currency)) {
             throw new InvalidArgumentException("Invalid currency code format: {$currency}");
         }
-        
+
         return match (strtoupper($currency)) {
             'USD' => '$',
             'EUR' => '€',
@@ -66,7 +65,7 @@ class WalletHelpers
             'AUD' => 'A$',
             'CHF' => 'CHF',
             'CNY' => '¥',
-            default => strtoupper($currency) . ' ',
+            default => strtoupper($currency).' ',
         };
     }
 
@@ -84,7 +83,7 @@ class WalletHelpers
     public static function getSupportedCurrencies(): array
     {
         return config('multi-wallet.supported_currencies', [
-            'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY'
+            'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY',
         ]);
     }
 
@@ -101,12 +100,12 @@ class WalletHelpers
      */
     public static function generateWalletSlug(string $name, string $currency, ?int $holderId = null): string
     {
-        $baseSlug = strtolower(trim($name)) . '-' . strtolower($currency);
-        
+        $baseSlug = strtolower(trim($name)).'-'.strtolower($currency);
+
         if ($holderId) {
-            $baseSlug .= '-' . $holderId;
+            $baseSlug .= '-'.$holderId;
         }
-        
+
         return preg_replace('/[^a-z0-9-]/', '-', $baseSlug);
     }
 
@@ -171,9 +170,9 @@ class WalletHelpers
      */
     public static function validateWalletHolder(Model $model): void
     {
-        if (!self::hasWalletTrait($model)) {
+        if (! self::hasWalletTrait($model)) {
             throw new InvalidArgumentException(
-                'Model must use HasWallets trait: ' . get_class($model)
+                'Model must use HasWallets trait: '.get_class($model)
             );
         }
     }
@@ -250,6 +249,7 @@ class WalletHelpers
     public static function calculateTransferFee(float $amount, float $feePercentage = 0, float $fixedFee = 0): float
     {
         $percentageFee = self::calculatePercentage($amount, $feePercentage);
+
         return self::roundAmount($percentageFee + $fixedFee);
     }
 
@@ -259,6 +259,7 @@ class WalletHelpers
     public static function calculateNetAmount(float $amount, float $feePercentage = 0, float $fixedFee = 0): float
     {
         $fee = self::calculateTransferFee($amount, $feePercentage, $fixedFee);
+
         return self::roundAmount($amount - $fee);
     }
 
@@ -269,9 +270,9 @@ class WalletHelpers
     {
         // Check for required fields if any
         $requiredFields = config('multi-wallet.transaction.required_metadata', []);
-        
+
         foreach ($requiredFields as $field) {
-            if (!isset($metadata[$field])) {
+            if (! isset($metadata[$field])) {
                 return false;
             }
         }
@@ -286,7 +287,7 @@ class WalletHelpers
     {
         // Remove sensitive fields
         $sensitiveFields = ['password', 'token', 'secret', 'key'];
-        
+
         foreach ($sensitiveFields as $field) {
             unset($metadata[$field]);
         }
@@ -306,7 +307,7 @@ class WalletHelpers
     public static function getWalletByCurrency(Model $user, string $currency): ?Wallet
     {
         self::validateWalletHolder($user);
-        
+
         return $user->wallets()->where('currency', strtoupper($currency))->first();
     }
 
@@ -316,13 +317,13 @@ class WalletHelpers
     public static function getOrCreateWalletByCurrency(Model $user, string $currency, ?string $name = null): Wallet
     {
         self::validateWalletHolder($user);
-        
+
         $wallet = self::getWalletByCurrency($user, $currency);
-        
-        if (!$wallet) {
+
+        if (! $wallet) {
             $wallet = $user->createWallet($currency, $name ?? "{$currency} Wallet");
         }
-        
+
         return $wallet;
     }
 
@@ -340,7 +341,7 @@ class WalletHelpers
     public static function getBalanceForCurrency(Model $user, string $currency, BalanceType $balanceType = BalanceType::AVAILABLE): float
     {
         $wallet = self::getWalletByCurrency($user, $currency);
-        
+
         return $wallet ? $wallet->getBalance($balanceType) : 0.0;
     }
 
@@ -350,12 +351,12 @@ class WalletHelpers
     public static function getTotalBalanceAcrossCurrencies(Model $user, BalanceType $balanceType = BalanceType::AVAILABLE): array
     {
         self::validateWalletHolder($user);
-        
+
         $balances = [];
         foreach ($user->wallets as $wallet) {
             $balances[$wallet->currency] = $wallet->getBalance($balanceType);
         }
-        
+
         return $balances;
     }
 
@@ -395,7 +396,7 @@ class WalletHelpers
      */
     public static function isWalletActive(Wallet $wallet): bool
     {
-        return !$wallet->trashed() && $wallet->getTotalBalance() >= 0;
+        return ! $wallet->trashed() && $wallet->getTotalBalance() >= 0;
     }
 
     /**
@@ -472,19 +473,19 @@ class WalletHelpers
     private function calculateTieredFee(float $amount, array $config): float
     {
         $tiers = $config['tiers'] ?? [];
-        
+
         foreach ($tiers as $tier) {
             if ($amount >= $tier['min'] && ($tier['max'] === null || $amount < $tier['max'])) {
                 return ($amount * $tier['rate']) / 100;
             }
         }
-        
+
         // If no tier matches, use the highest tier
         $lastTier = end($tiers);
         if ($lastTier && $amount >= $lastTier['min']) {
             return ($amount * $lastTier['rate']) / 100;
         }
-        
+
         return 0.0;
     }
 
@@ -494,17 +495,17 @@ class WalletHelpers
     public function validateMetadata(array $metadata): bool
     {
         $sensitiveKeys = ['password', 'token', 'api_key', 'secret'];
-        
+
         foreach ($metadata as $key => $value) {
             if (in_array(strtolower($key), $sensitiveKeys)) {
                 return false;
             }
-            
+
             if (is_string($value) && strlen($value) > 1000) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -517,8 +518,8 @@ class WalletHelpers
             return ['total' => 0, 'average' => 0, 'min' => 0, 'max' => 0, 'count' => 0];
         }
 
-        $balances = array_map(fn($wallet) => $wallet->getBalance(BalanceType::AVAILABLE), $wallets);
-        
+        $balances = array_map(fn ($wallet) => $wallet->getBalance(BalanceType::AVAILABLE), $wallets);
+
         return [
             'total' => array_sum($balances),
             'average' => array_sum($balances) / count($balances),
@@ -541,7 +542,7 @@ class WalletHelpers
      */
     public function formatMultipleCurrencies(array $amounts): array
     {
-        return array_map(function($item) {
+        return array_map(function ($item) {
             return self::formatAmountStatic($item['amount'], $item['currency']);
         }, $amounts);
     }
@@ -552,7 +553,7 @@ class WalletHelpers
     public function formatBalanceSummary(Wallet $wallet): array
     {
         $summary = self::getBalanceSummary($wallet);
-        
+
         return [
             'available' => self::formatAmountStatic($summary['available'], $wallet->currency),
             'pending' => self::formatAmountStatic($summary['pending'], $wallet->currency),
@@ -561,4 +562,4 @@ class WalletHelpers
             'total' => self::formatAmountStatic($summary['total'], $wallet->currency),
         ];
     }
-} 
+}

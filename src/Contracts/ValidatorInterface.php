@@ -2,9 +2,9 @@
 
 namespace HWallet\LaravelMultiWallet\Contracts;
 
-use HWallet\LaravelMultiWallet\Models\Wallet;
 use HWallet\LaravelMultiWallet\Models\Transaction;
 use HWallet\LaravelMultiWallet\Models\Transfer;
+use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -86,4 +86,4 @@ interface ValidatorInterface
      * Get validation warnings
      */
     public function getWarnings(array $validationResult): array;
-} 
+}

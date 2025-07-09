@@ -2,7 +2,6 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
 use InvalidArgumentException;
 
@@ -74,11 +73,11 @@ class BalanceSummary
         $requiredFields = ['available', 'pending', 'frozen', 'trial', 'total'];
 
         foreach ($requiredFields as $field) {
-            if (!isset($balances[$field])) {
+            if (! isset($balances[$field])) {
                 throw new InvalidArgumentException("Missing required balance field: {$field}");
             }
 
-            if (!is_numeric($balances[$field])) {
+            if (! is_numeric($balances[$field])) {
                 throw new InvalidArgumentException("Balance field {$field} must be numeric");
             }
         }

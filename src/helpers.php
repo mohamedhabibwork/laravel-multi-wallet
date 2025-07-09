@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('wallet_format_amount')) {
+if (! function_exists('wallet_format_amount')) {
     /**
      * Format amount with currency
      */
@@ -10,7 +10,7 @@ if (!function_exists('wallet_format_amount')) {
     }
 }
 
-if (!function_exists('wallet_is_currency_supported')) {
+if (! function_exists('wallet_is_currency_supported')) {
     /**
      * Check if currency is supported
      */
@@ -20,7 +20,7 @@ if (!function_exists('wallet_is_currency_supported')) {
     }
 }
 
-if (!function_exists('wallet_validate_amount')) {
+if (! function_exists('wallet_validate_amount')) {
     /**
      * Validate amount within limits
      */
@@ -30,7 +30,7 @@ if (!function_exists('wallet_validate_amount')) {
     }
 }
 
-if (!function_exists('wallet_calculate_fee')) {
+if (! function_exists('wallet_calculate_fee')) {
     /**
      * Calculate transfer fee
      */
@@ -40,7 +40,7 @@ if (!function_exists('wallet_calculate_fee')) {
     }
 }
 
-if (!function_exists('wallet_round_amount')) {
+if (! function_exists('wallet_round_amount')) {
     /**
      * Round amount to specified decimals
      */
@@ -50,7 +50,7 @@ if (!function_exists('wallet_round_amount')) {
     }
 }
 
-if (!function_exists('wallet_calculate_percentage')) {
+if (! function_exists('wallet_calculate_percentage')) {
     /**
      * Calculate percentage of amount
      */
@@ -60,7 +60,7 @@ if (!function_exists('wallet_calculate_percentage')) {
     }
 }
 
-if (!function_exists('wallet_format_balance_summary')) {
+if (! function_exists('wallet_format_balance_summary')) {
     /**
      * Format balance summary for display
      */
@@ -70,23 +70,23 @@ if (!function_exists('wallet_format_balance_summary')) {
     }
 }
 
-if (!function_exists('wallet_get_user_summary')) {
+if (! function_exists('wallet_get_user_summary')) {
     /**
      * Get user wallet summary
      */
     function wallet_get_user_summary($user): array
     {
         $summary = \HWallet\LaravelMultiWallet\Helpers\WalletHelpers::getUserWalletSummary($user);
-        
+
         $totalBalance = 0;
         foreach ($summary as $currency => $data) {
             $totalBalance += $data['balance_summary']['total'] ?? 0;
         }
-        
+
         return [
             'wallets' => $summary,
             'total_balance' => $totalBalance,
             'currencies' => array_keys($summary),
         ];
     }
-} 
+}

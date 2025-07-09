@@ -2,7 +2,6 @@
 
 namespace HWallet\LaravelMultiWallet\Types;
 
-
 use InvalidArgumentException;
 
 /**
@@ -92,7 +91,7 @@ class WalletConfiguration
         // Validate currency codes
         if (isset($config['allowed_currencies']) && is_array($config['allowed_currencies'])) {
             foreach ($config['allowed_currencies'] as $currency) {
-                if (!preg_match('/^[A-Z]{3}$/', strtoupper($currency))) {
+                if (! preg_match('/^[A-Z]{3}$/', strtoupper($currency))) {
                     throw new InvalidArgumentException("Invalid currency code: {$currency}");
                 }
             }

@@ -4,13 +4,10 @@ namespace HWallet\LaravelMultiWallet\Services\Validators;
 
 use HWallet\LaravelMultiWallet\Contracts\ValidatorInterface;
 use HWallet\LaravelMultiWallet\Contracts\WalletConfigurationInterface;
-use HWallet\LaravelMultiWallet\Enums\BalanceType;
-use HWallet\LaravelMultiWallet\Enums\TransactionType;
-use HWallet\LaravelMultiWallet\Enums\TransferStatus;
-use HWallet\LaravelMultiWallet\Models\Wallet;
+use HWallet\LaravelMultiWallet\Helpers\WalletHelpers;
 use HWallet\LaravelMultiWallet\Models\Transaction;
 use HWallet\LaravelMultiWallet\Models\Transfer;
-use HWallet\LaravelMultiWallet\Helpers\WalletHelpers;
+use HWallet\LaravelMultiWallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 
@@ -35,13 +32,13 @@ class WalletValidator implements ValidatorInterface
         $warnings = [];
 
         // Validate holder
-        if (!WalletHelpers::hasWalletTrait($holder)) {
+        if (! WalletHelpers::hasWalletTrait($holder)) {
             $errors[] = 'Model must use HasWallets trait';
         }
 
         // Validate currency
         $currencyValidation = $this->validateCurrency($currency);
-        if (!$this->isValid($currencyValidation)) {
+        if (! $this->isValid($currencyValidation)) {
             $errors = array_merge($errors, $this->getErrors($currencyValidation));
         }
 
@@ -63,7 +60,7 @@ class WalletValidator implements ValidatorInterface
         }
 
         // Validate attributes
-        if (isset($attributes['meta']) && !$this->isValid($this->validateMetadata($attributes['meta'], 'wallet'))) {
+        if (isset($attributes['meta']) && ! $this->isValid($this->validateMetadata($attributes['meta'], 'wallet'))) {
             $errors = array_merge($errors, $this->getErrors($this->validateMetadata($attributes['meta'], 'wallet')));
         }
 
@@ -85,7 +82,7 @@ class WalletValidator implements ValidatorInterface
         // Validate currency change
         if (isset($attributes['currency'])) {
             $currencyValidation = $this->validateCurrency($attributes['currency']);
-            if (!$this->isValid($currencyValidation)) {
+            if (! $this->isValid($currencyValidation)) {
                 $errors = array_merge($errors, $this->getErrors($currencyValidation));
             }
 
@@ -101,7 +98,7 @@ class WalletValidator implements ValidatorInterface
         }
 
         // Validate metadata
-        if (isset($attributes['meta']) && !$this->isValid($this->validateMetadata($attributes['meta'], 'wallet'))) {
+        if (isset($attributes['meta']) && ! $this->isValid($this->validateMetadata($attributes['meta'], 'wallet'))) {
             $errors = array_merge($errors, $this->getErrors($this->validateMetadata($attributes['meta'], 'wallet')));
         }
 
@@ -122,13 +119,13 @@ class WalletValidator implements ValidatorInterface
 
         // Validate amount
         $amountValidation = $this->validateAmount($amount);
-        if (!$this->isValid($amountValidation)) {
+        if (! $this->isValid($amountValidation)) {
             $errors = array_merge($errors, $this->getErrors($amountValidation));
         }
 
         // Validate balance type
         $balanceTypeValidation = $this->validateBalanceType($balanceType);
-        if (!$this->isValid($balanceTypeValidation)) {
+        if (! $this->isValid($balanceTypeValidation)) {
             $errors = array_merge($errors, $this->getErrors($balanceTypeValidation));
         }
 
@@ -142,7 +139,7 @@ class WalletValidator implements ValidatorInterface
         }
 
         // Validate metadata
-        if (!empty($meta) && !$this->isValid($this->validateMetadata($meta, 'transaction'))) {
+        if (! empty($meta) && ! $this->isValid($this->validateMetadata($meta, 'transaction'))) {
             $errors = array_merge($errors, $this->getErrors($this->validateMetadata($meta, 'transaction')));
         }
 
@@ -163,7 +160,7 @@ class WalletValidator implements ValidatorInterface
 
         // Validate amount
         $amountValidation = $this->validateAmount($amount);
-        if (!$this->isValid($amountValidation)) {
+        if (! $this->isValid($amountValidation)) {
             $errors = array_merge($errors, $this->getErrors($amountValidation));
         }
 
@@ -178,14 +175,14 @@ class WalletValidator implements ValidatorInterface
         }
 
         // Check sufficient balance
-        if (!$fromWallet->canDebit($amount, 'available')) {
+        if (! $fromWallet->canDebit($amount, 'available')) {
             $errors[] = 'Insufficient available balance for transfer';
         }
 
         // Validate fee
         if (isset($options['fee'])) {
             $feeValidation = $this->validateAmount($options['fee']);
-            if (!$this->isValid($feeValidation)) {
+            if (! $this->isValid($feeValidation)) {
                 $errors = array_merge($errors, $this->getErrors($feeValidation));
             }
 
@@ -197,7 +194,7 @@ class WalletValidator implements ValidatorInterface
         }
 
         // Validate metadata
-        if (isset($options['meta']) && !$this->isValid($this->validateMetadata($options['meta'], 'transfer'))) {
+        if (isset($options['meta']) && ! $this->isValid($this->validateMetadata($options['meta'], 'transfer'))) {
             $errors = array_merge($errors, $this->getErrors($this->validateMetadata($options['meta'], 'transfer')));
         }
 
@@ -218,6 +215,7 @@ class WalletValidator implements ValidatorInterface
 
         if (empty($operations)) {
             $errors[] = 'No operations provided';
+
             return [
                 'is_valid' => false,
                 'errors' => $errors,
@@ -231,15 +229,16 @@ class WalletValidator implements ValidatorInterface
         }
 
         foreach ($operations as $index => $operation) {
-            if (!is_array($operation)) {
+            if (! is_array($operation)) {
                 $errors[] = "Operation at index {$index} must be an array";
+
                 continue;
             }
 
             // Validate required fields based on operation type
             $requiredFields = $this->getRequiredFieldsForOperationType($operationType);
             foreach ($requiredFields as $field) {
-                if (!isset($operation[$field])) {
+                if (! isset($operation[$field])) {
                     $errors[] = "Operation at index {$index} missing required field: {$field}";
                 }
             }
@@ -247,15 +246,15 @@ class WalletValidator implements ValidatorInterface
             // Validate specific operation data
             if (isset($operation['amount'])) {
                 $amountValidation = $this->validateAmount($operation['amount']);
-                if (!$this->isValid($amountValidation)) {
-                    $errors[] = "Operation at index {$index}: " . implode(', ', $this->getErrors($amountValidation));
+                if (! $this->isValid($amountValidation)) {
+                    $errors[] = "Operation at index {$index}: ".implode(', ', $this->getErrors($amountValidation));
                 }
             }
 
             if (isset($operation['currency'])) {
                 $currencyValidation = $this->validateCurrency($operation['currency']);
-                if (!$this->isValid($currencyValidation)) {
-                    $errors[] = "Operation at index {$index}: " . implode(', ', $this->getErrors($currencyValidation));
+                if (! $this->isValid($currencyValidation)) {
+                    $errors[] = "Operation at index {$index}: ".implode(', ', $this->getErrors($currencyValidation));
                 }
             }
         }
@@ -279,7 +278,7 @@ class WalletValidator implements ValidatorInterface
         if (isset($config['allowed_currencies']) && is_array($config['allowed_currencies'])) {
             foreach ($config['allowed_currencies'] as $currency) {
                 $currencyValidation = $this->validateCurrency($currency);
-                if (!$this->isValid($currencyValidation)) {
+                if (! $this->isValid($currencyValidation)) {
                     $errors = array_merge($errors, $this->getErrors($currencyValidation));
                 }
             }
@@ -319,11 +318,11 @@ class WalletValidator implements ValidatorInterface
 
         $code = strtoupper(trim($currency));
 
-        if (!preg_match('/^[A-Z]{3}$/', $code)) {
+        if (! preg_match('/^[A-Z]{3}$/', $code)) {
             $errors[] = 'Currency code must be exactly 3 uppercase letters';
         }
 
-        if (!WalletHelpers::isCurrencySupported($code)) {
+        if (! WalletHelpers::isCurrencySupported($code)) {
             $errors[] = "Unsupported currency: {$code}";
         }
 
@@ -342,7 +341,7 @@ class WalletValidator implements ValidatorInterface
         $errors = [];
         $warnings = [];
 
-        if (!is_finite($amount)) {
+        if (! is_finite($amount)) {
             $errors[] = 'Amount must be a finite number';
         }
 
@@ -376,8 +375,8 @@ class WalletValidator implements ValidatorInterface
         $warnings = [];
 
         $validTypes = ['available', 'pending', 'frozen', 'trial'];
-        if (!in_array($balanceType, $validTypes)) {
-            $errors[] = "Invalid balance type. Must be one of: " . implode(', ', $validTypes);
+        if (! in_array($balanceType, $validTypes)) {
+            $errors[] = 'Invalid balance type. Must be one of: '.implode(', ', $validTypes);
         }
 
         return [
@@ -396,8 +395,8 @@ class WalletValidator implements ValidatorInterface
         $warnings = [];
 
         $validTypes = ['credit', 'debit'];
-        if (!in_array($transactionType, $validTypes)) {
-            $errors[] = "Invalid transaction type. Must be one of: " . implode(', ', $validTypes);
+        if (! in_array($transactionType, $validTypes)) {
+            $errors[] = 'Invalid transaction type. Must be one of: '.implode(', ', $validTypes);
         }
 
         return [
@@ -416,8 +415,8 @@ class WalletValidator implements ValidatorInterface
         $warnings = [];
 
         $validStatuses = ['pending', 'confirmed', 'rejected', 'failed'];
-        if (!in_array($status, $validStatuses)) {
-            $errors[] = "Invalid transfer status. Must be one of: " . implode(', ', $validStatuses);
+        if (! in_array($status, $validStatuses)) {
+            $errors[] = 'Invalid transfer status. Must be one of: '.implode(', ', $validStatuses);
         }
 
         return [
@@ -435,8 +434,9 @@ class WalletValidator implements ValidatorInterface
         $errors = [];
         $warnings = [];
 
-        if (!is_array($metadata)) {
+        if (! is_array($metadata)) {
             $errors[] = 'Metadata must be an array';
+
             return [
                 'is_valid' => false,
                 'errors' => $errors,
@@ -503,4 +503,4 @@ class WalletValidator implements ValidatorInterface
             default => [],
         };
     }
-} 
+}

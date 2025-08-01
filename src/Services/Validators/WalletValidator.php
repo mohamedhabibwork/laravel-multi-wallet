@@ -216,7 +216,7 @@ class WalletValidator implements ValidatorInterface
         // Validate required fields
         $requiredFields = ['wallet', 'type', 'amount', 'balance_type'];
         foreach ($requiredFields as $field) {
-            if (!isset($transactionData[$field])) {
+            if (! isset($transactionData[$field])) {
                 $errors[] = "Missing required field: {$field}";
             }
         }
@@ -249,21 +249,21 @@ class WalletValidator implements ValidatorInterface
         // Validate allowed search fields
         $allowedFields = ['holder_type', 'holder_id', 'currency', 'name', 'balance_min', 'balance_max', 'created_after', 'created_before'];
         foreach ($criteria as $field => $value) {
-            if (!in_array($field, $allowedFields)) {
+            if (! in_array($field, $allowedFields)) {
                 $errors[] = "Invalid search field: {$field}";
             }
         }
 
         // Validate specific field types
-        if (isset($criteria['balance_min']) && !is_numeric($criteria['balance_min'])) {
+        if (isset($criteria['balance_min']) && ! is_numeric($criteria['balance_min'])) {
             $errors[] = 'balance_min must be numeric';
         }
 
-        if (isset($criteria['balance_max']) && !is_numeric($criteria['balance_max'])) {
+        if (isset($criteria['balance_max']) && ! is_numeric($criteria['balance_max'])) {
             $errors[] = 'balance_max must be numeric';
         }
 
-        if (isset($criteria['currency']) && !$this->isValid($this->validateCurrency($criteria['currency']))) {
+        if (isset($criteria['currency']) && ! $this->isValid($this->validateCurrency($criteria['currency']))) {
             $errors[] = 'Invalid currency in search criteria';
         }
 

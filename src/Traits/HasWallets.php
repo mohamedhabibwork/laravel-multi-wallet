@@ -180,7 +180,7 @@ trait HasWallets
         array $options = []
     ): Transfer {
         $fromWallet = $this->getWallet($currency);
-        
+
         if (! $fromWallet) {
             throw new WalletNotFoundException("Sender wallet not found for currency {$currency}");
         }

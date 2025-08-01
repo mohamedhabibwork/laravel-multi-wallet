@@ -77,7 +77,7 @@ class WalletUtils
         }
 
         // Check transaction consistency
-        $transactions = $wallet->transactions;
+        $transactions = $wallet->transactions();
         $calculatedBalances = [
             'available' => 0,
             'pending' => 0,
@@ -85,7 +85,7 @@ class WalletUtils
             'trial' => 0,
         ];
 
-        foreach ($transactions as $transaction) {
+        foreach ($transactions->cursor() as $transaction) {
             $amount = $transaction->amount;
             $balanceType = $transaction->balance_type;
 
@@ -129,17 +129,17 @@ class WalletUtils
         }
 
         try {
-            DB::transaction(function () use ($wallet) {
-                // Recalculate balances from transactions
-                $calculatedBalances = [
-                    'available' => 0,
-                    'pending' => 0,
-                    'frozen' => 0,
-                    'trial' => 0,
-                ];
+            $calculatedBalances = [
+                'available' => 0,
+                'pending' => 0,
+                'frozen' => 0,
+                'trial' => 0,
+            ];
 
-                $transactions = $wallet->transactions;
-                foreach ($transactions as $transaction) {
+            DB::transaction(function () use ($wallet, &$calculatedBalances) {
+                // Recalculate balances from transactions
+                $transactions = $wallet->transactions();
+                foreach ($transactions->cursor() as $transaction) {
                     $amount = $transaction->amount;
                     $balanceType = $transaction->balance_type;
 
@@ -573,7 +573,7 @@ class WalletUtils
     /**
      * Generate summary report using cursor for best performance
      */
-    public static function generateSummaryReport(Model $user): array
+    public static function generateSummaryReport(Model $user, array $options = []): array
     {
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();
@@ -816,7 +816,7 @@ class WalletUtils
     /**
      * Generate performance report using cursor for best performance
      */
-    public static function generatePerformanceReport(Model $user): array
+    public static function generatePerformanceReport(Model $user, array $options = []): array
     {
         // Use cursor for memory-efficient processing
         $walletsCursor = $user->wallets()->cursor();

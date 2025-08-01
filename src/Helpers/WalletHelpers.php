@@ -396,7 +396,7 @@ class WalletHelpers
      */
     public static function isWalletActive(Wallet $wallet): bool
     {
-        return ! $wallet->trashed() && $wallet->getTotalBalance() >= 0;
+        return $wallet->getTotalBalance() >= 0;
     }
 
     /**
@@ -404,7 +404,7 @@ class WalletHelpers
      */
     public static function getWalletAge(Wallet $wallet): int
     {
-        return $wallet->created_at->diffInDays(now());
+        return (int) $wallet->created_at->diffInDays(now());
     }
 
     /**

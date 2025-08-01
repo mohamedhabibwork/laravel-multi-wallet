@@ -165,6 +165,19 @@ class WalletConfiguration implements WalletConfigurationInterface
     }
 
     /**
+     * Get transfer settings
+     */
+    public function getTransferSettings(): array
+    {
+        return $this->config['transfer_settings'] ?? [
+            'max_fee_percentage' => 10,
+            'default_fee_percentage' => 0,
+            'enable_cross_currency' => true,
+            'require_confirmation' => false,
+        ];
+    }
+
+    /**
      * Get events configuration
      */
     public function getEventsConfiguration(): array

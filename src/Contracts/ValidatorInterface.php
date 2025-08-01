@@ -28,6 +28,16 @@ interface ValidatorInterface
     public function validateTransactionCreation(Wallet $wallet, float $amount, string $balanceType, array $meta = []): array;
 
     /**
+     * Validate transaction (generic method)
+     */
+    public function validateTransaction(array $transactionData): array;
+
+    /**
+     * Validate search criteria
+     */
+    public function validateSearchCriteria(array $criteria): array;
+
+    /**
      * Validate transfer creation
      */
     public function validateTransferCreation(Wallet $fromWallet, Wallet $toWallet, float $amount, array $options = []): array;

@@ -206,6 +206,75 @@ class WalletValidator implements ValidatorInterface
     }
 
     /**
+     * Validate transaction (generic method)
+     */
+    public function validateTransaction(array $transactionData): array
+    {
+        $errors = [];
+        $warnings = [];
+
+        // Validate required fields
+        $requiredFields = ['wallet', 'type', 'amount', 'balance_type'];
+        foreach ($requiredFields as $field) {
+            if (!isset($transactionData[$field])) {
+                $errors[] = "Missing required field: {$field}";
+            }
+        }
+
+        if (empty($errors)) {
+            // Validate using existing method
+            $wallet = $transactionData['wallet'];
+            $amount = $transactionData['amount'];
+            $balanceType = $transactionData['balance_type'];
+            $metadata = $transactionData['metadata'] ?? [];
+
+            return $this->validateTransactionCreation($wallet, $amount, $balanceType, $metadata);
+        }
+
+        return [
+            'is_valid' => empty($errors),
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
+     * Validate search criteria
+     */
+    public function validateSearchCriteria(array $criteria): array
+    {
+        $errors = [];
+        $warnings = [];
+
+        // Validate allowed search fields
+        $allowedFields = ['holder_type', 'holder_id', 'currency', 'name', 'balance_min', 'balance_max', 'created_after', 'created_before'];
+        foreach ($criteria as $field => $value) {
+            if (!in_array($field, $allowedFields)) {
+                $errors[] = "Invalid search field: {$field}";
+            }
+        }
+
+        // Validate specific field types
+        if (isset($criteria['balance_min']) && !is_numeric($criteria['balance_min'])) {
+            $errors[] = 'balance_min must be numeric';
+        }
+
+        if (isset($criteria['balance_max']) && !is_numeric($criteria['balance_max'])) {
+            $errors[] = 'balance_max must be numeric';
+        }
+
+        if (isset($criteria['currency']) && !$this->isValid($this->validateCurrency($criteria['currency']))) {
+            $errors[] = 'Invalid currency in search criteria';
+        }
+
+        return [
+            'is_valid' => empty($errors),
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
      * Validate bulk operations
      */
     public function validateBulkOperations(array $operations, string $operationType): array
@@ -225,7 +294,8 @@ class WalletValidator implements ValidatorInterface
 
         $maxBatchSize = Config::get('multi-wallet.bulk_operations.max_batch_size', 1000);
         if (count($operations) > $maxBatchSize) {
-            $errors[] = "Batch size ({count($operations)}) exceeds maximum allowed ({$maxBatchSize})";
+            $operationCount = count($operations);
+            $errors[] = "Batch size ({$operationCount}) exceeds maximum allowed ({$maxBatchSize})";
         }
 
         foreach ($operations as $index => $operation) {
@@ -433,16 +503,6 @@ class WalletValidator implements ValidatorInterface
     {
         $errors = [];
         $warnings = [];
-
-        if (! is_array($metadata)) {
-            $errors[] = 'Metadata must be an array';
-
-            return [
-                'is_valid' => false,
-                'errors' => $errors,
-                'warnings' => $warnings,
-            ];
-        }
 
         // Check for sensitive fields
         $sensitiveFields = ['password', 'token', 'secret', 'key', 'api_key'];

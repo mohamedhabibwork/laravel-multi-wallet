@@ -44,17 +44,16 @@ class WalletIntegrationService
         $configType = WalletTypes::createWalletConfiguration($configuration);
 
         // Validate with comprehensive validator
-        $validationResult = $this->validator->validateWalletCreation([
-            'holder' => $holder,
-            'currency' => $currency,
-            'name' => $name,
-            'metadata' => $metadata,
-            'configuration' => $configuration,
-        ]);
+        $validationResult = $this->validator->validateWalletCreation(
+            $holder,
+            $currency,
+            $name,
+            array_merge($metadata, $configuration)
+        );
 
-        if (! $validationResult->isValid()) {
+        if (! $this->validator->isValid($validationResult)) {
             throw new \InvalidArgumentException(
-                'Wallet creation validation failed: '.implode(', ', $validationResult->getErrors())
+                'Wallet creation validation failed: '.implode(', ', $this->validator->getErrors($validationResult))
             );
         }
 
@@ -63,6 +62,7 @@ class WalletIntegrationService
                 $holder,
                 $currencyType->getCode(),
                 $name,
+                null,
                 $metadataType->getData()
             );
 
@@ -107,9 +107,9 @@ class WalletIntegrationService
             'metadata' => $metadata,
         ]);
 
-        if (! $validationResult->isValid()) {
+        if (! $this->validator->isValid($validationResult)) {
             throw new \InvalidArgumentException(
-                'Transaction validation failed: '.implode(', ', $validationResult->getErrors())
+                'Transaction validation failed: '.implode(', ', $this->validator->getErrors($validationResult))
             );
         }
 

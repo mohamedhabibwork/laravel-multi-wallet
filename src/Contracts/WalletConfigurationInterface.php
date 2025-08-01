@@ -53,4 +53,9 @@ interface WalletConfigurationInterface
      * Check if audit logging is enabled
      */
     public function isAuditLoggingEnabled(): bool;
+
+    /**
+     * Get transfer settings
+     */
+    public function getTransferSettings(): array;
 }

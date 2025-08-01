@@ -47,13 +47,18 @@ test('it throws exception for insufficient funds', function () {
     expect(fn () => $this->user1->transferTo($this->user2, 50.00, 'USD'))->toThrow(\HWallet\LaravelMultiWallet\Exceptions\InsufficientFundsException::class);
 });
 
-test('it throws exception for different currencies', function () {
+test('it can transfer between different currencies using exchange rate', function () {
     $this->wallet1->credit(100.00, 'available');
     $this->wallet2->update(['currency' => 'EUR']);
 
-    // The transferTo method should find the EUR wallet and fail since transfer is between different currencies
-    expect(fn () => $this->user1->transferTo($this->user2, 50.00, 'USD'))->toThrow(\InvalidArgumentException::class);
-})->skip('Disabled until proper currency conversion validation is implemented');
+    // The transferTo method should handle currency conversion using the exchange rate provider
+    $transfer = $this->user1->transferTo($this->user2, 50.00, 'USD');
+
+    expect($transfer)->toBeInstanceOf(Transfer::class);
+    expect($this->wallet1->refresh()->getBalance('available'))->toBe(50.00);
+    // With default 1:1 exchange rate, EUR wallet should receive 50.00 EUR
+    expect($this->wallet2->refresh()->getBalance('available'))->toBe(50.00);
+});
 
 test('it can apply fees to transfers', function () {
     $this->wallet1->credit(100.00, 'available');

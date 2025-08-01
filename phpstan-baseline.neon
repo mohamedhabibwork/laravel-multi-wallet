@@ -3,8 +3,152 @@ parameters:
 		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 21
+			count: 34
 			path: config/multi-wallet.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$wallets\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Helpers/WalletHelpers.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:createWallet\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Helpers/WalletHelpers.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:wallets\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Helpers/WalletHelpers.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:wallets\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/Validators/WalletValidator.php
+
+		-
+			message: '#^Variable \$errors in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Services/Validators/WalletValidator.php
+
+		-
+			message: '#^Access to an undefined property HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 8
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Access to an undefined property HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$transactions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Call to an undefined method HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface\:\:transactions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Call to an undefined method HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface\:\:update\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTotalBalance\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:transactions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Cannot call method getErrors\(\) on array\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on array\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Services\\WalletIntegrationService\:\:getFormattedBalances\(\) expects HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Services\\WalletIntegrationService\:\:getWalletStatus\(\) expects HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:checkWalletHealth\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:getWalletPerformanceMetrics\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:getWalletPerformanceMetrics\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:getWalletStats\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:reconcileWallet\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Parameter \#1 \$wallet of method HWallet\\LaravelMultiWallet\\Utils\\WalletUtils\:\:validateWalletIntegrity\(\) expects HWallet\\LaravelMultiWallet\\Models\\Wallet, HWallet\\LaravelMultiWallet\\Contracts\\WalletInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/WalletIntegrationService.php
+
+		-
+			message: '#^Property HWallet\\LaravelMultiWallet\\Services\\WalletIntegrationService\:\:\$bulkWalletManager is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Services/WalletIntegrationService.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:wallets\(\)\.$#'
@@ -41,4 +185,94 @@ parameters:
 			identifier: trait.unused
 			count: 1
 			path: src/Traits/HasWallets.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 11
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$balance_type\.$#'
+			identifier: property.notFound
+			count: 5
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 24
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$fee\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$from_wallet_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 12
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$to_wallet_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 8
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getAmount\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:wallets\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Utils/WalletUtils.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Utils/WalletUtils.php
 

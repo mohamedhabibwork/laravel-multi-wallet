@@ -180,10 +180,19 @@ trait HasWallets
         array $options = []
     ): Transfer {
         $fromWallet = $this->getWallet($currency);
-        $toWallet = $recipient->getOrCreateWallet($currency);
-
+        
         if (! $fromWallet) {
             throw new WalletNotFoundException("Sender wallet not found for currency {$currency}");
+        }
+
+        // Check if recipient has an existing wallet with a different currency
+        $existingWallet = $recipient->wallets()->first();
+        if ($existingWallet && $existingWallet->currency !== $currency) {
+            // Use the existing wallet's currency for currency conversion
+            $toWallet = $existingWallet;
+        } else {
+            // Create or get wallet with the same currency
+            $toWallet = $recipient->getOrCreateWallet($currency);
         }
 
         return app(WalletManager::class)->transfer($fromWallet, $toWallet, $amount, $options);

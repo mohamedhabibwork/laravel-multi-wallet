@@ -57,4 +57,14 @@ interface WalletRepositoryInterface
      * Search wallets
      */
     public function search(array $criteria): Collection;
+
+    /**
+     * Get wallets with transactions for a holder
+     */
+    public function getWalletsWithTransactions(Model $holder): Collection;
+
+    /**
+     * Get statistics for a holder
+     */
+    public function getStatistics(Model $holder): array;
 }

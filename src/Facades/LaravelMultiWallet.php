@@ -222,7 +222,7 @@ class LaravelMultiWallet extends Facade
      */
     public static function formatAmount(float $amount, string $currency = 'USD', int $decimals = 2)
     {
-        return WalletHelpers::formatAmount($amount, $currency, $decimals);
+        return WalletHelpers::formatAmountStatic($amount, $currency, $decimals);
     }
 
     /**

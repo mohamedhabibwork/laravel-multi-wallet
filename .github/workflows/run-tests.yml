@@ -60,9 +60,9 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           if [[ "${{ matrix.laravel }}" == "10.*" ]]; then
-            composer require "pestphp/pest-plugin-laravel:^2.0" --no-interaction --no-update
+            composer require "pestphp/pest:^2.0" "pestphp/pest-plugin-laravel:^2.0" --no-interaction --no-update
           else
-            composer require "pestphp/pest-plugin-laravel:^3.0" --no-interaction --no-update
+            composer require "pestphp/pest:^3.0" "pestphp/pest-plugin-laravel:^3.0" --no-interaction --no-update
           fi
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 

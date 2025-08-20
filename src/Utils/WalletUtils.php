@@ -1,5 +1,6 @@
 <?php
 
+// Wallet utilities for managing operations
 namespace HWallet\LaravelMultiWallet\Utils;
 
 use HWallet\LaravelMultiWallet\Enums\BalanceType;

@@ -1,5 +1,6 @@
 <?php
 
+// Wallet utilities for managing operations
 namespace HWallet\LaravelMultiWallet\Utils;
 
 use HWallet\LaravelMultiWallet\Enums\BalanceType;
@@ -1071,8 +1072,8 @@ class WalletUtils
         $minAmount = $minAmount === PHP_FLOAT_MAX ? 0 : $minAmount;
 
         // Find most and least active hours
-        $mostActiveHour = array_keys($hourlyActivity, max($hourlyActivity))[0] ?? 12;
-        $leastActiveHour = array_keys($hourlyActivity, min($hourlyActivity))[0] ?? 3;
+        $mostActiveHour = array_keys($hourlyActivity, max($hourlyActivity))[0];
+        $leastActiveHour = array_keys($hourlyActivity, min($hourlyActivity))[0];
 
         // Calculate weekend activity ratio
         $weekendActivity = $transactionCount > 0 ? $weekendCount / $transactionCount : 0;
